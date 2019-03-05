@@ -1,0 +1,8 @@
+*.pyc
+*.DS_Store
+*.idea
+*.csv
+/settings/*
+!settings/*.example
+.ipynb_checkpoints/*
+ddapp_env/*
