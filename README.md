@@ -1,6 +1,5 @@
 # ddapp
-full stack data science project that builds machine learning model then implements into production
-via Flask app/API
+full stack data science project that builds machine learning model using Python and Pyspark (Spark SQL) then implements into production via Flask app/API
 
 I have pulled English Premier League Match/Score Data for 2017/18 season and the current season
 and have started to analyze the data.  Next, I to develop machine learning model using the data 
