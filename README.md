@@ -17,4 +17,6 @@ the model and its API can be updated automatically using an Airflow instance.
 feel free to fork and submit for pull requests if you want to work with me 
 on this.
 
+current progress: creating last 3,5 game features for model
+
 --placeholder for more detail about data, analysis, model, and Flask app--
