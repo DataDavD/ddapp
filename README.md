@@ -1,21 +1,10 @@
 # ddapp
-full stack data science project that builds machine learning model using Python and Pyspark (Spark SQL & MLlib) then implements into production via Flask app/API
+Full stack data science project that builds machine learning model using Python and Spark Spark SQL & MLlib) then implements into production via Flask app/API.  Eventually Airflow DAG on EC2 instance will be rewritten that fetches new match data, spins up EMR cluster, runs PySpark script for data manipulation, model training, and saving the model so that the API can fetch the new predictions/odds, and finally, closing down the EMR cluster. 
 
-I have pulled English Premier League Match/Score Data for 2017/18 season and the current season
-and have started to analyze the data.  Next, I to develop machine learning model using the data 
-to generate predictions based on user entered data on Flask app which I'm callin dapp given 
-my initial, dd. 
+### current progress: 
+- finished Spark SQL and python code to transform data and calculate new features
+- finished logistic regression model using Spark MLlib 
+- next, will finish testing GBTClassifier (gradient boosted tree) and then implement json predictions/odds as flask API/app
 
-data source: https://datahub.io/sports-data/english-premier-league 
-(includes field descriptions and csv/json data formats)
-
-The data is pretty current, so after I implement everything I hope to write a script to 
-use the football-data.org API to pull update match statistics programmatically so that 
-the model and its API can be updated automatically using an Airflow instance.
-
-feel free to fork and submit for pull requests if you want to work with me 
-on this.
-
-current progress: creating last 3,5 game features for model
-
---placeholder for more detail about data, analysis, model, and Flask app--
+### data source: 
+https://datahub.io/sports-data/english-premier-league (includes field descriptions and csv/json data formats)
