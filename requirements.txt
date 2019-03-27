@@ -43,8 +43,9 @@ entrypoints==0.3
 enum34==1.1.6
 et-xmlfile==1.0.1
 fastcache==1.0.2
+findspark==1.3.0
 flake8==3.7.7
-Flask==0.12.4
+Flask==1.0.2
 Flask-Admin==1.5.2
 Flask-AppBuilder==1.12.1
 Flask-Babel==0.12.2
@@ -72,6 +73,7 @@ importlib-metadata==0.7
 ipykernel==5.1.0
 ipython==7.3.0
 ipython-genutils==0.2.0
+ipython-sql==0.3.9
 ipywidgets==7.4.2
 iso8601==0.1.12
 isort==4.3.8
@@ -122,6 +124,7 @@ parso==0.3.4
 partd==0.3.9
 path.py==11.5.0
 pathlib2==2.3.3
+patsy==0.5.1
 pendulum==1.4.4
 pep8==1.7.1
 pexpect==4.6.0
@@ -129,14 +132,17 @@ pickleshare==0.7.5
 Pillow==5.4.1
 pluggy==0.9.0
 ply==3.11
+prettytable==0.7.2
 prometheus-client==0.6.0
 prompt-toolkit==2.0.9
 psutil==5.5.0
 ptyprocess==0.6.0
 py==1.8.0
+pyarrow==0.12.1
 pycodestyle==2.5.0
 pycosat==0.6.3
 pycparser==2.19
+pycrypto==2.6.1
 pycurl==7.43.0.2
 pyflakes==2.1.0
 Pygments==2.3.1
@@ -180,6 +186,8 @@ sphinxcontrib-websupport==1.1.0
 spyder==3.3.3
 spyder-kernels==0.4.2
 SQLAlchemy==1.2.18
+sqlparse==0.3.0
+statsmodels==0.9.0
 sympy==1.3
 tabulate==0.8.2
 tblib==1.3.2
