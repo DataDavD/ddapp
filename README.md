@@ -6,7 +6,7 @@ Full stack data science project that builds machine learning model using Python 
 - finished logistic regression model using Spark MLlib 
 - finished testing GBTClassifier (gradient boosted tree; didn't improve over logistic regression with similar features)
 - saved logistic regression model
-- created base Flask api
+- created Flask API that takes in JSON of feature key/values and returns JSON of probabilites of each binary class and the predicted label
 
 ### data source: 
 https://datahub.io/sports-data/english-premier-league (includes field descriptions and csv/json data formats)
