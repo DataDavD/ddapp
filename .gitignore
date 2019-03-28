@@ -5,6 +5,6 @@
 /settings/*
 !settings/*.example
 .ipynb_checkpoints
-
 ddapp_env/*
 bestLogmodel
+untitled*
