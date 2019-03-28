@@ -4,8 +4,8 @@ Full stack data science project that builds machine learning model using Python 
 ### current progress: 
 - finished Spark SQL and python code to transform data and calculate new features
 - finished logistic regression model using Spark MLlib 
-- finish testing GBTClassifier (gradient boosted tree) and then implement json predictions/odds as flask API/app
-- saved logistic regression model for now
+- finished testing GBTClassifier (gradient boosted tree; didn't improve over logistic regression with similar features)
+- saved logistic regression model
 - created base Flask api
 
 ### data source: 
