@@ -6,6 +6,10 @@ from pyspark.ml import PipelineModel
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import udf
+from pyspark.sql.types import FloatType
+
+import pandas as pd
 
 
 ddapp = Flask(__name__)
@@ -26,13 +30,6 @@ spark = SparkSession \
 
 bestPipe = PipelineModel.load('bestPipeLogReg')
 
-jsondd = [{"HomeTeam": "Burnley", "AwayTeam": "Huddersfield",
-           "homeLast5goals": 5, "awayLast5goals": 2,
-           "homeLast5shots_on": 10, "awayLast5shots_on": 10},
-          {"HomeTeam": "Man City", "AwayTeam": "Wolves",
-           "homeLast5goals": 10, "awayLast5goals": 10,
-           "homeLast5shots_on": 30, "awayLast5shots_on": 25}]
-
 
 @lrmod.route("/")
 class LogReg(Resource):
@@ -43,14 +40,24 @@ class LogReg(Resource):
 
         _model_inputs = request.get_json()
 
-        #_df = spark.read.json(_model_inputs, multiLine=True)
+        #_df = spark.read.json(_model_inputs)
 
-        #lr_fit = bestPipe.transform(_df)
+        df0 = pd.read_json('dataTest.json', orient='columns')
+        _df = spark.createDataFrame(df0)
 
-        #probs = lr_fit.select(lr_fit.probability)
-        #preds = lr_fit.select(lr_fit.prediction)
+        lr_fit = bestPipe.transform(_df)
 
-        return jsonify(_model_inputs)
+        split1_udf = udf(lambda value: value[0].item(), FloatType())
+        split2_udf = udf(lambda value: value[1].item(), FloatType())
+
+        output = lr_fit.select(split1_udf('probability').alias('neg_prob'),
+                               split2_udf('probability').alias('pos_prob'),
+                               lr_fit.prediction)
+
+        df1 = output.toPandas()
+        df2 = df1.to_json(orient='records')
+
+        return jsonify(df2)
 
 
 if __name__ == '__main__':
