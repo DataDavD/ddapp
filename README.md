@@ -1,5 +1,5 @@
 # ddapp
-Full stack data science project that builds machine learning model using Python and Spark (Spark SQL & MLlib) then implements into production via Flask app/API.  Eventually Airflow DAG on EC2 instance will be written that fetches new match data, spins up EMR cluster, runs PySpark script for data manipulation, model training, and saving the model so that the API can fetch the new predictions/odds, and finally, spinning down the EMR cluster. 
+Full stack data science project that builds machine learning model using Python and Spark (Spark SQL & MLlib) then implements into production via Flask API.  Eventually Airflow DAG on EC2 instance will be written that fetches new match data, spins up EMR cluster, runs PySpark script for data manipulation, model training, and saving the model so that the API can fetch the new predictions/odds, and finally, spinning down the EMR cluster. 
 
 ### current progress: 
 - finished Spark SQL and python code to transform data and calculate new features
