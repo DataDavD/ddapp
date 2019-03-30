@@ -12,6 +12,15 @@ from pyspark.sql.types import FloatType
 import pandas as pd
 
 
+spark = SparkSession \
+    .builder \
+    .master('local') \
+    .appName("pysparkDDapp") \
+    .getOrCreate()
+
+bestPipe = PipelineModel.load('bestPipeLogReg')
+
+
 ddapp = Flask(__name__)
 api = Api(app=ddapp,
           version='0.0.1',
@@ -20,15 +29,6 @@ api = Api(app=ddapp,
 
 lrmod = api.namespace('lrmodel',
                       description='API used to predict total goals of match')
-
-
-spark = SparkSession \
-    .builder \
-    .master('local') \
-    .appName("pysparkDDapp") \
-    .getOrCreate()
-
-bestPipe = PipelineModel.load('bestPipeLogReg')
 
 
 @lrmod.route("/")
@@ -40,10 +40,7 @@ class LogReg(Resource):
 
         _model_inputs = request.get_json()
 
-        #_df = spark.read.json(_model_inputs)
-
-        df0 = pd.read_json('dataTest.json', orient='columns')
-        _df = spark.createDataFrame(df0)
+        _df = spark.createDataFrame(_model_inputs)
 
         lr_fit = bestPipe.transform(_df)
 
