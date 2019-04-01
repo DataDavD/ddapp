@@ -5,11 +5,9 @@ from pyspark.ml.feature import StringIndexer, StandardScaler
 from pyspark.ml import PipelineModel
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, Row
 from pyspark.sql.functions import udf
 from pyspark.sql.types import FloatType
-
-import pandas as pd
 
 
 spark = SparkSession \
@@ -40,7 +38,7 @@ class LogReg(Resource):
 
         _model_inputs = request.get_json()
 
-        _df = spark.createDataFrame(_model_inputs)
+        _df = spark.createDataFrame(Row(**x) for x in _model_inputs)
 
         lr_fit = bestPipe.transform(_df)
 
