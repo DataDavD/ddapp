@@ -44,7 +44,10 @@ teamList = list(df_set)
 df_total = pd.concat([df_1718, df_1819], ignore_index=True)
 df_total['total_score'] = (df_total.FTHG + df_total.FTAG)
 df_total['y'] = df_total['total_score'].apply(lambda x: 1 if x > 2.5 else 0)
-df_total.head()
+df_total = df_total.sort_values(by=['Date'], ascending=True) \
+                   .reset_index(drop=True)
+df_total['idx_test'] = df_total.index
+# df_total.head()
 
 
 def last5_byteam(df=df_total, team='Arsenal'):
@@ -153,11 +156,14 @@ for k, v in pandas_dict.items():
     pds_list.append(v)
 
 df_total2 = (reduce(lambda df1, df2:
-                    df1.append(df2,  ignore_index=True),
-                    pds_list)) \
-                    .groupby(['idx_test', 'Date'])\
-                    ['homeLast5goals', 'awayLast5goals',
-                     'homeLast5Hgoals', 'awayLast5Hgoals',
-                     'homeLast5shots', 'awayLast5shots',
-                     'homeLast5shots_on', 'awayLast5shots_on'].sum() \
-                                                              .reset_index(drop=False)
+                    df1.append(df2,
+                               ignore_index=True), pds_list)) \
+                       .groupby(['idx_test',
+                                 'Date'])['homeLast5goals',
+                                          'awayLast5goals',
+                                          'homeLast5shots_on',
+                                          'awayLast5shots_on'].sum()
+
+df_total3 = df_total2.reset_index(drop=False)
+
+df_final = df_total.merge(df_total3, on=['Date', 'idx_test'])
