@@ -1,9 +1,8 @@
+from pyspark.sql import SparkSession, Row
+from functools import reduce
 import requests
 import json
 import pandas as pd
-from pyspark.sql import SparkSession, Row
-from functools import reduce
-
 
 spark = SparkSession \
     .builder \
@@ -43,11 +42,11 @@ teamList = list(df_set)
 
 df_total = pd.concat([df_1718, df_1819], ignore_index=True)
 df_total['total_score'] = (df_total.FTHG + df_total.FTAG)
-df_total['y'] = df_total['total_score'].apply(lambda x: 1 if x > 2.5 else 0)
+df_total['label'] = df_total['total_score'].apply(lambda x:
+                                                  1 if x > 2.5 else 0)
 df_total = df_total.sort_values(by=['Date'], ascending=True) \
                    .reset_index(drop=True)
 df_total['idx_test'] = df_total.index
-# df_total.head()
 
 
 def last5_byteam(df=df_total, team='Arsenal'):
@@ -56,20 +55,14 @@ def last5_byteam(df=df_total, team='Arsenal'):
     dfteam.head()
     dfteam['team'] = team
 
-    def goals(row, home, away):
+    def __goals(row, home, away):
         if row["HomeTeam"] == team:
             return row[home]
         elif row["AwayTeam"] == team:
             return row[away]
 
-    dfteam['goals'] = dfteam.apply(goals, axis=1, home='FTHG', away='FTAG')
-    dfteam['h_goals'] = dfteam.apply(goals, axis=1, home='HTHG', away='HTAG')
-    dfteam['shots'] = dfteam.apply(goals, axis=1, home='HS', away='AS')
-    dfteam['shots_on'] = dfteam.apply(goals, axis=1, home='HST', away='AST')
-    dfteam['fls'] = dfteam.apply(goals, axis=1, home='HF', away='AF')
-    dfteam['corns'] = dfteam.apply(goals, axis=1, home='HC', away='AC')
-    dfteam['yells'] = dfteam.apply(goals, axis=1, home='HY', away='AY')
-    dfteam['rds'] = dfteam.apply(goals, axis=1, home='HR', away='AR')
+    dfteam['goals'] = dfteam.apply(__goals, axis=1, home='FTHG', away='FTAG')
+    dfteam['shots_on'] = dfteam.apply(__goals, axis=1, home='HST', away='AST')
 
     dfteam = dfteam.sort_values(by=['Date']).reset_index(drop=True)
 
@@ -88,9 +81,6 @@ df_dict = {}
 for team in teamList:
     df_dict[team] = last5_byteam(team=team)
 
-# df_dict['Man United'].head()
-# len(df_dict)
-
 # create SparkDataFrame from df_total
 sp_df = spark.createDataFrame(df_total)
 sp_df.show(3)
@@ -100,18 +90,12 @@ sdf_dict = {}
 for k, v in df_dict.items():
     sdf_dict[k] = spark.createDataFrame(v)
 
-# sdf_dict['Man United'].show(3)
-# type(sdf_dict['Man United']) # verify spark dataframe type
-# len(sdf_dict) # check df # matches # of teams
-
 # create list of tempviews for spark sql
 spsql_list = []
 for team in teamList:
     sdf_dict[team].createOrReplaceTempView((str(team).replace(" ",
                                                               "_")+'_sql'))
     spsql_list.append(((str(team).replace(" ", "_")+'_sql')))
-
-# spsql_list
 
 # build each teams "last 5" dataframe
 spdf_dict = {}
@@ -133,13 +117,11 @@ for s in spsql_list:
                      and (a.HomeTeam = b.team OR a.AwayTeam = b.team)
                 order by a.Date""".format(s)
     sqlDF = spark.sql(query)
-    sqlDF[['y', 'Date', 'HomeTeam', 'AwayTeam', 'team',
+    sqlDF[['label', 'Date', 'HomeTeam', 'AwayTeam', 'team',
            'total_score', 'homeLast5goals', 'awayLast5goals',
            'homeLast5shots_on', 'awayLast5shots_on']].show(20)
     type(sqlDF)
     spdf_dict[s] = sqlDF
-
-# spdf_dict.keys()
 
 pandas_dict = {}
 for key, spark_sqlDF in spdf_dict.items():
@@ -167,3 +149,17 @@ df_total2 = (reduce(lambda df1, df2:
 df_total3 = df_total2.reset_index(drop=False)
 
 df_final = df_total.merge(df_total3, on=['Date', 'idx_test'])
+df_final = df_final.drop(columns=['FTHG', 'FTAG', 'HTHG', 'HTAG',
+                                  'HS', 'AS', 'HST', 'AST', 'HF',
+                                  'AF', 'HC', 'AC', 'HY', 'AY',
+                                  'HR', 'AR', 'FTR', 'HTR',
+                                  'total_score', 'Referee',
+                                  'idx_test'])
+
+# filter above 5 gameweek so that we have enough data for last 5 fields
+df_final = df_final[df_final.Date >= '2017-09-23'].reset_index(drop=True)
+df_final = df_final.drop(columns=['Date'])  # then drop Date
+
+df_final.to_csv('modelDataFrame.csv')  # replace with boto3 call to save to S3
+# df_final.head()
+# df_final.info()
