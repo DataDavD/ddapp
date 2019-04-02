@@ -3,6 +3,11 @@ from functools import reduce
 import requests
 import json
 import pandas as pd
+import boto3
+import io
+
+s3_resource = boto3.resource('s3')
+s3_bucket = s3_resource.Bucket('ddapi.data')
 
 spark = SparkSession \
     .builder \
@@ -160,6 +165,9 @@ df_final = df_final.drop(columns=['FTHG', 'FTAG', 'HTHG', 'HTAG',
 df_final = df_final[df_final.Date >= '2017-09-23'].reset_index(drop=True)
 df_final = df_final.drop(columns=['Date'])  # then drop Date
 
-df_final.to_csv('modelDataFrame.csv')  # replace with boto3 call to save to S3
-# df_final.head()
-# df_final.info()
+# create csv buffer to send df to S3
+csv_buffer = io.StringIO()
+csv = df_final.to_csv(csv_buffer, index=False)
+
+# send csv to s3 bucket
+s3_bucket.upload_file(Filename='modelDataFrame.csv', Key='modelDataFrame.csv')
