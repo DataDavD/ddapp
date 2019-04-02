@@ -1,1 +1,0 @@
-{"class":"org.apache.spark.ml.feature.VectorAssembler","timestamp":1553750779137,"sparkVersion":"2.4.0","uid":"VectorAssembler_8d0960455e98","paramMap":{"outputCol":"featuresNum0","inputCols":["homeLast5goals","awayLast5goals","homeLast5shots_on","awayLast5shots_on"]},"defaultParamMap":{"outputCol":"VectorAssembler_8d0960455e98__output","handleInvalid":"error"}}

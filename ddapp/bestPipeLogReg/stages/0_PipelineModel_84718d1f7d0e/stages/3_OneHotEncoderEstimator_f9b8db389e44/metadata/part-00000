@@ -1,1 +1,0 @@
-{"class":"org.apache.spark.ml.feature.OneHotEncoderModel","timestamp":1553750778795,"sparkVersion":"2.4.0","uid":"OneHotEncoderEstimator_f9b8db389e44","paramMap":{"inputCols":["AwayTeamIndex"],"outputCols":["AwayTeamcatVec"]},"defaultParamMap":{"dropLast":true,"handleInvalid":"error"}}
