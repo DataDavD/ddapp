@@ -19,6 +19,8 @@ beautifulsoup4==4.7.1
 bitarray==0.8.3
 bleach==2.1.4
 boto==2.49.0
+boto3==1.9.126
+botocore==1.12.126
 bs4==0.0.1
 certifi==2018.11.29
 cffi==1.12.1
@@ -81,6 +83,7 @@ itsdangerous==1.1.0
 jdcal==1.4
 jedi==0.13.3
 Jinja2==2.10
+jmespath==0.9.4
 json-merge-patch==0.2
 jsonschema==2.6.0
 jupyter==1.0.0
@@ -138,6 +141,7 @@ prompt-toolkit==2.0.9
 psutil==5.5.0
 ptyprocess==0.6.0
 py==1.8.0
+py4j==0.10.7
 pyarrow==0.12.1
 pycodestyle==2.5.0
 pycosat==0.6.3
@@ -151,6 +155,7 @@ pyodbc==4.0.26
 pyOpenSSL==19.0.0
 pyparsing==2.3.1
 PySocks==1.6.8
+pyspark==2.4.0
 pytest==4.3.0
 python-daemon==2.1.2
 python-dateutil==2.8.0
@@ -169,6 +174,7 @@ relativetimebuilder==0.2.0
 requests==2.21.0
 rope==0.12.0
 ruamel-yaml==0.15.46
+s3transfer==0.2.0
 scipy==1.2.1
 seaborn==0.9.0
 Send2Trash==1.5.0
