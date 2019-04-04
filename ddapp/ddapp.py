@@ -40,19 +40,19 @@ class LogReg(Resource):
 
         _df = spark.createDataFrame(Row(**x) for x in _model_inputs)
 
-        lr_fit = bestPipe.transform(_df)
+        _lr_fit = bestPipe.transform(_df)
 
         split1_udf = udf(lambda value: value[0].item(), FloatType())
         split2_udf = udf(lambda value: value[1].item(), FloatType())
 
-        output = lr_fit.select(split1_udf('probability').alias('neg_prob'),
-                               split2_udf('probability').alias('pos_prob'),
-                               lr_fit.prediction)
+        output = _lr_fit.select(split1_udf('probability').alias('neg_prob'),
+                                split2_udf('probability').alias('pos_prob'),
+                                _lr_fit.prediction)
 
-        df1 = output.toPandas()
-        df2 = df1.to_json(orient='records')
+        # need to change line below to go directly from spark DF to JSON
+        df = (output.toPandas()).to_json(orient='records')
 
-        return jsonify(df2)
+        return jsonify(df)
 
 
 if __name__ == '__main__':
