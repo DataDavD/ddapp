@@ -4,7 +4,6 @@ import requests
 import json
 import pandas as pd
 import boto3
-import io
 
 s3_resource = boto3.resource('s3')
 s3_bucket = s3_resource.Bucket('ddapi.data')
@@ -165,9 +164,6 @@ df_final = df_final.drop(columns=['FTHG', 'FTAG', 'HTHG', 'HTAG',
 df_final = df_final[df_final.Date >= '2017-09-23'].reset_index(drop=True)
 df_final = df_final.drop(columns=['Date'])  # then drop Date
 
-# create csv buffer to send df to S3
-csv_buffer = io.StringIO()
-csv = df_final.to_csv(csv_buffer, index=False)
-
-# send csv to s3 bucket
-s3_bucket.upload_file(Filename='modelDataFrame.csv', Key='modelDataFrame.csv')
+# send json to s3 bucket
+json = df_final.to_json(orient='records')
+s3_bucket.put_object(Body=json, Key='modelDataFrame.json')

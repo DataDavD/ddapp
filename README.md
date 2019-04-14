@@ -9,7 +9,7 @@ Full stack data science project that builds machine learning model using Python 
 - created Flask API that takes in JSON of feature key/values and returns JSON of probabilites of each binary class and the predicted label
 
 ### next steps:
-- finish writing pyspark ETL script to pull new match data and retrain logistic regression model using Spark MLlib
+- finish writing pyspark ETL script that utilizes Spark MLlib to retrain logistic regression model and boosted tree model and select and save the best performaning one
 - create python boto3 script to spin up EMR cluster, run ETL script and model training script, and then spin down EMR cluster
 - automate ETL and model training using Airflow DAG
 - deploy Airflow DAG on EC2 instance
