@@ -85,6 +85,8 @@ step_response = emr_client.add_job_flow_steps(
                             'Args': ['/home/hadoop/spark/bin/spark-submit',
                                      '--deploy-mode', 'cluster',
                                      '--master', 'yarn',
+                                     '--conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=/home/hadoop/conda/bin/python',
+                                     '--conf spark.executorEnv.PYSPARK_PYTHON=/home/hadoop/conda/bin/python'
                                      '/home/hadoop/emr_test.py']
                         }
                      }
