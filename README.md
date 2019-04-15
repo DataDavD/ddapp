@@ -7,16 +7,17 @@ Full stack data science project that builds machine learning model using Python 
 - finished testing GBTClassifier (gradient boosted tree; didn't improve over logistic regression with similar features)
 - saved logistic regression model
 - created Flask API that takes in JSON of feature key/values and returns JSON of probabilites of each binary class and the predicted label
+- create and almost finished with emr script using boto3 that spins up cluster, runs etl script, and spins down cluster
 
 ### next steps:
-- finish writing pyspark ETL script that utilizes Spark MLlib to retrain logistic regression model and boosted tree model and select and save the best performaning one
-- create python boto3 script to spin up EMR cluster, run ETL script and model training script, and then spin down EMR cluster
-- automate ETL and model training using Airflow DAG
+- finish writing pyspark ETL script that utilizes Spark MLlib by finishing code to save best pipeline/model object to s3 bucket
+- automate ETL and model trainig scripts using Airflow DAG
 - deploy Airflow DAG on EC2 instance
+- connect Flask API to saved model in s3
 - deploy Flask API using Zappa and AWS Lambda + API Gateway
 
 ### data source:
 https://datahub.io/sports-data/english-premier-league (includes field descriptions and csv/json data formats)
 
 ### help:
-Please feel free to fork and submit pull requests.
+Please feel free to fork and submit pull requests.  I would love any help about boto3 emr scripts :)
