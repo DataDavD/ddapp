@@ -9,6 +9,7 @@ emr_client = boto3.client('emr', region_name='us-east-1')
 # upload file to an S3 bucket
 s3 = boto3.resource('s3')
 
+# need to refactor formatting of emr job calls below
 response = emr_client.run_job_flow(
     Name="ddapi EMR Cluster",
     ReleaseLabel='emr-5.23.0',
@@ -20,12 +21,12 @@ response = emr_client.run_job_flow(
         'TerminationProtected': False,
     },
     Applications=[
-        {'Name': 'Hadoop'},
+        #{'Name': 'Hadoop'},
         {'Name': 'Spark'}
     ],
     BootstrapActions=[
         {
-            'Name': 'bootstrap test',
+            'Name': 'bootstrap test/install conda',
             'ScriptBootstrapAction': {
                 'Path': 's3://ddapi.data/ddapp_emr_bootstrap.sh',
             }
@@ -39,17 +40,56 @@ response = emr_client.run_job_flow(
 job_flow_id = response['JobFlowId']
 print(job_flow_id)
 
+response = emr_client.add_job_flow_steps(
+            JobFlowId=job_flow_id,
+            Steps=[
+                {
+                    'Name': 'setup - copy files',
+                    'ActionOnFailure': 'CANCEL_AND_WAIT',
+                    'HadoopJarStep': {
+                        'Jar': 'command-runner.jar',
+                        'Args': ['aws', 's3', 'cp',
+                                 's3://ddapi.data/pyspark_setup.sh',
+                                 '/home/hadoop/']
+                    }
+                },
+                {
+                    'Name': 'setup pyspark with conda',
+                    'ActionOnFailure': 'CANCEL_AND_WAIT',
+                    'HadoopJarStep': {
+                        'Jar': 'command-runner.jar',
+                        'Args': ['sudo', 'bash', '/home/hadoop/pyspark_setup.sh']
+                    }
+                }
+            ]
+        )
+
 step_response = emr_client.add_job_flow_steps(
-        JobFlowId=job_flow_id,
-        Steps=[{
-            'Name': 'Spark Application',
-            'ActionOnFailure': 'CANCEL_AND_WAIT',
-            'HadoopJarStep': {
-               'Jar': 'command-runner.jar',
-               'Args': ["spark-submit", '/home/hadoop/emr_test.py']
-            }
-        }]
-    )
+                 JobFlowId=job_flow_id,
+                 Steps=[
+                     {
+                         'Name': 'setup - copy emr test py file',
+                         'ActionOnFailure': 'CANCEL_AND_WAIT',
+                         'HadoopJarStep': {
+                             'Jar': 'command-runner.jar',
+                             'Args': ['aws', 's3', 'cp',
+                                      's3://ddapi.data/emr_test.py',
+                                      '/home/hadoop/']
+                  }
+                     },
+                     {
+                        'Name': 'ddapp spark app test',
+                        'ActionOnFailure': 'CANCEL_AND_WAIT',
+                        'HadoopJarStep': {
+                            'Jar': 'command-runner.jar',
+                            'Args': ['/home/hadoop/spark/bin/spark-submit',
+                                     '--deploy-mode', 'cluster',
+                                     '--master', 'yarn',
+                                     '/home/hadoop/emr_test.py']
+                        }
+                     }
+                 ]
+             )
 
 steps_id = step_response['StepIds']
 print("Step IDs:", steps_id)
