@@ -1,11 +1,11 @@
 from pyspark.sql import SparkSession
 # import boto3
-import json
+#import json
 
-spark = SparkSession \
-    .builder \
-    .appName("DDapp_model_updt") \
-    .getOrCreate()
+#spark = SparkSession \
+#    .builder \
+#    .appName("DDapp_model_updt") \
+#    .getOrCreate()
 
 #s3_resource = boto3.resource('s3')
 #obj = s3_resource.Object('ddapi.data', 'modelDataFrame.json')
@@ -16,7 +16,7 @@ spark = SparkSession \
 #data = json.loads(data)
 
 #df = spark.createDataFrame(Row(**x) for x in data)
-print('complete')
+#print('complete')
 
 # df = df.toPandas()
 # json = df.to_json(orient='records')

@@ -12,6 +12,7 @@ s3 = boto3.resource('s3')
 # need to refactor formatting of emr job calls below
 response = emr_client.run_job_flow(
     Name="ddapi EMR Cluster",
+    LogUri='s3://ddapi.data/logs',
     ReleaseLabel='emr-5.23.0',
     Instances={
         'MasterInstanceType': 'm1.xlarge',
@@ -21,7 +22,7 @@ response = emr_client.run_job_flow(
         'TerminationProtected': False,
     },
     Applications=[
-        #{'Name': 'Hadoop'},
+        {'Name': 'Hadoop'},
         {'Name': 'Spark'}
     ],
     BootstrapActions=[
@@ -81,12 +82,12 @@ step_response = emr_client.add_job_flow_steps(
                         'Name': 'ddapp spark app test',
                         'ActionOnFailure': 'CANCEL_AND_WAIT',
                         'HadoopJarStep': {
-                            'Jar': 'command-runner.jar',
-                            'Args': ['/home/hadoop/spark/bin/spark-submit',
+                            'Jar': 's3://us-east-1.elasticmapreduce/libs/script-runner/script-runner.jar',
+                            'Args': ['spark-submit',
                                      '--deploy-mode', 'cluster',
                                      '--master', 'yarn',
-                                     '--conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=/home/hadoop/conda/bin/python',
-                                     '--conf spark.executorEnv.PYSPARK_PYTHON=/home/hadoop/conda/bin/python'
+                                    # '--conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=/home/hadoop/conda/bin/python',
+                                    # '--conf spark.yarn.executorEnv.PYSPARK_PYTHON=/home/hadoop/conda/bin/python'
                                      '/home/hadoop/emr_test.py']
                         }
                      }
@@ -95,6 +96,12 @@ step_response = emr_client.add_job_flow_steps(
 
 steps_id = step_response['StepIds']
 print("Step IDs:", steps_id)
+
+response = emr_client.terminate_job_flows(
+    JobFlowIds=[
+        job_flow_id,
+    ]
+)
 
 
 
