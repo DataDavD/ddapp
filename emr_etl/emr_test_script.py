@@ -9,7 +9,7 @@ emr_client = boto3.client('emr', region_name='us-east-1')
 # upload file to an S3 bucket
 s3 = boto3.resource('s3')
 
-# need to refactor formatting of emr job calls below
+# need to refactor/format emr job calls below
 response = emr_client.run_job_flow(
     Name="ddapi EMR Cluster",
     LogUri='s3://ddapi.data/logs',
@@ -98,12 +98,12 @@ step_response = emr_client.add_job_flow_steps(
                         'Name': 'ddapp spark app test',
                         'ActionOnFailure': 'CANCEL_AND_WAIT',
                         'HadoopJarStep': {
-                            'Jar': 's3://us-east-1.elasticmapreduce/libs/script-runner/script-runner.jar',
+                            'Jar': 'command-runner.jar',
                             'Args': ['spark-submit',
                                      '--deploy-mode', 'cluster',
                                      '--master', 'yarn',
-                                     '--conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=/usr/bin/python3',
-                                     '--conf spark.yarn.executorEnv.PYSPARK_PYTHON=/usr/bin/python3'
+                                     #'--conf', 'spark.yarn.appMasterEnv.PYSPARK_PYTHON=python3',
+                                     #'--conf', 'spark.yarn.executorEnv.PYSPARK_PYTHON=python3'
                                     # '/home/hadoop/emr_test.py',
                                     's3://ddapi.data/emr_test.py']
                         }
@@ -119,21 +119,3 @@ response = emr_client.terminate_job_flows(
         job_flow_id,
     ]
 )
-
-
-
-spark = SparkSession \
-    .builder \
-    .appName("DDapp_model_updt") \
-    .getOrCreate()
-
-s3_resource = boto3.resource('s3')
-obj = s3_resource.Object('ddapi.data', 'modelDataFrame.json')
-data = obj.get()['Body'].read().decode()
-
-data = json.loads(data)
-
-df = spark.createDataFrame(Row(**x) for x in data)
-df.show()
-
-# df.write.csv('s3a://ddapi.data/dftest.csv')

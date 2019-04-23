@@ -7,12 +7,12 @@ Full stack data science project that builds machine learning model using Python 
 - finished testing GBTClassifier (gradient boosted tree; didn't improve over logistic regression with similar features)
 - saved logistic regression model
 - created Flask API that takes in JSON of feature key/values and returns JSON of probabilites of each binary class and the predicted label
-- create and almost finished with emr script using boto3 that spins up cluster, runs PySpark etl script, and spins down cluster
+- create and almost finished with emr script using boto3 that spins up cluster, runs PySpark etl script, and spins down cluster (trying to resolve spark-submit issue)
 
 ### next steps:
-- finish writing PySpark ETL script
+- finish writing PySpark ETL script and refactor to only use PySpark instead of Pandas parts of code
 - finish PySpark script that utilizes Spark MLlib and EMR cluster to save best pipeline/model object to s3 bucket
-- automate EMR cluster creation, ETL, and model trainig scripts using Airflow DAG
+- automate EMR cluster creation, ETL, and model training scripts using Airflow DAG
 - deploy Airflow DAG on EC2 instance
 - connect Flask API to saved model in s3
 - deploy Flask API using Zappa and AWS Lambda + API Gateway
