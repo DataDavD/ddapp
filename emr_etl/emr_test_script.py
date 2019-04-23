@@ -35,7 +35,23 @@ response = emr_client.run_job_flow(
     ],
     VisibleToAllUsers=True,
     JobFlowRole='EMR_EC2_DefaultRole',
-    ServiceRole='EMR_DefaultRole'
+    ServiceRole='EMR_DefaultRole',
+    Configurations=[
+        {
+            "Classification": "spark-env",
+            "Properties": {},
+            "Configurations": [
+                {
+                    "Classification": "export",
+                    "Properties": {
+                        "PYSPARK_PYTHON": "/usr/bin/python3"
+                    },
+                    "Configurations": []
+                }
+            ]
+        }
+    ],
+
 )
 
 job_flow_id = response['JobFlowId']
@@ -76,7 +92,7 @@ step_response = emr_client.add_job_flow_steps(
                              'Args': ['aws', 's3', 'cp',
                                       's3://ddapi.data/emr_test.py',
                                       '/home/hadoop/']
-                  }
+                     }
                      },
                      {
                         'Name': 'ddapp spark app test',
@@ -86,9 +102,10 @@ step_response = emr_client.add_job_flow_steps(
                             'Args': ['spark-submit',
                                      '--deploy-mode', 'cluster',
                                      '--master', 'yarn',
-                                    # '--conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=/home/hadoop/conda/bin/python',
-                                    # '--conf spark.yarn.executorEnv.PYSPARK_PYTHON=/home/hadoop/conda/bin/python'
-                                     '/home/hadoop/emr_test.py']
+                                     '--conf spark.yarn.appMasterEnv.PYSPARK_PYTHON=/usr/bin/python3',
+                                     '--conf spark.yarn.executorEnv.PYSPARK_PYTHON=/usr/bin/python3'
+                                    # '/home/hadoop/emr_test.py',
+                                    's3://ddapi.data/emr_test.py']
                         }
                      }
                  ]
