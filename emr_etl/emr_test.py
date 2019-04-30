@@ -26,4 +26,4 @@ df = spark.read.json('s3://ddapi.data/modelDataFrame.json')
 # s3_bucket = s3_resource.Bucket('ddapi.data')
 # s3_bucket.put_object(Body=json, Key='emr_test.json')
 
-df.write.parquet("s3://ddapi.data/test123.parquet", mode="overwrite")
+df.write.parquet("s3://ddapi.data/test1234.parquet", mode="overwrite")

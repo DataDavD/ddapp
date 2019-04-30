@@ -6,8 +6,10 @@ import json
 # connect to EMR client
 emr_client = boto3.client('emr', region_name='us-east-1')
 
-# upload file to an S3 bucket
-s3 = boto3.resource('s3')
+# create key for emr ec2 instance just in case need to SSH into cluster
+# ec2 = boto3.client('ec2', region_name='us-east-1')
+# create_key_response = ec2.create_key_pair(KeyName='ec2_emr_key')
+
 
 # need to refactor/format emr job calls below
 response = emr_client.run_job_flow(
@@ -15,11 +17,26 @@ response = emr_client.run_job_flow(
     LogUri='s3://ddapi.data/logs',
     ReleaseLabel='emr-5.23.0',
     Instances={
-        'MasterInstanceType': 'm1.xlarge',
-        'SlaveInstanceType': 'm1.xlarge',
-        'InstanceCount': 2,
+        'InstanceGroups': [
+            {
+                'Name': "Master nodes",
+                'Market': 'ON_DEMAND',
+                'InstanceRole': 'MASTER',
+                'InstanceType': 'm4.large',
+                'InstanceCount': 1,
+            },
+            {
+                'Name': "Slave nodes",
+                'Market': 'ON_DEMAND',
+                'InstanceRole': 'CORE',
+                'InstanceType': 'm4.large',
+                'InstanceCount': 2,
+            }
+        ],
+        # 'Ec2KeyName': 'Dkan-key-supun',
         'KeepJobFlowAliveWhenNoSteps': True,
         'TerminationProtected': False,
+        # 'Ec2SubnetId': 'string',
     },
     Applications=[
         {'Name': 'Hadoop'},
@@ -27,7 +44,7 @@ response = emr_client.run_job_flow(
     ],
     BootstrapActions=[
         {
-            'Name': 'bootstrap test/install conda',
+            'Name': 'bootstrap requirements',
             'ScriptBootstrapAction': {
                 'Path': 's3://ddapi.data/ddapp_emr_bootstrap.sh',
             }
@@ -51,71 +68,74 @@ response = emr_client.run_job_flow(
             ]
         }
     ],
-
 )
 
 job_flow_id = response['JobFlowId']
-print(job_flow_id)
+print("Job", job_flow_id, " is running :)")
 
-response = emr_client.add_job_flow_steps(
-            JobFlowId=job_flow_id,
-            Steps=[
-                {
-                    'Name': 'setup - copy files',
-                    'ActionOnFailure': 'CANCEL_AND_WAIT',
-                    'HadoopJarStep': {
-                        'Jar': 'command-runner.jar',
-                        'Args': ['aws', 's3', 'cp',
-                                 's3://ddapi.data/pyspark_setup.sh',
-                                 '/home/hadoop/']
-                    }
-                },
-                {
-                    'Name': 'setup pyspark with conda',
-                    'ActionOnFailure': 'CANCEL_AND_WAIT',
-                    'HadoopJarStep': {
-                        'Jar': 'command-runner.jar',
-                        'Args': ['sudo', 'bash', '/home/hadoop/pyspark_setup.sh']
-                    }
-                }
-            ]
-        )
+# no longer need below
+# response = emr_client.add_job_flow_steps(
+#    JobFlowId=job_flow_id,
+#    Steps=[
+#        {
+#            'Name': 'setup - copy files',
+#            'ActionOnFailure': 'CANCEL_AND_WAIT',
+#            'HadoopJarStep': {
+#                'Jar': 'command-runner.jar',
+#                'Args': ['aws', 's3', 'cp',
+#                         's3://ddapi.data/pyspark_setup.sh',
+#                         '/home/hadoop/']
+#            }
+#        },
+#        {
+#            'Name': 'setup pyspark with conda',
+#            'ActionOnFailure': 'CANCEL_AND_WAIT',
+#            'HadoopJarStep': {
+#                'Jar': 'command-runner.jar',
+#                'Args': ['sudo', 'bash', '/home/hadoop/pyspark_setup.sh']
+#            }
+#        }
+#    ]
+# )
+# no longer need above
 
 step_response = emr_client.add_job_flow_steps(
-                 JobFlowId=job_flow_id,
-                 Steps=[
-                     {
-                         'Name': 'setup - copy emr test py file',
-                         'ActionOnFailure': 'CANCEL_AND_WAIT',
-                         'HadoopJarStep': {
-                             'Jar': 'command-runner.jar',
-                             'Args': ['aws', 's3', 'cp',
-                                      's3://ddapi.data/emr_test.py',
-                                      '/home/hadoop/']
-                     }
-                     },
-                     {
-                        'Name': 'ddapp spark app test',
-                        'ActionOnFailure': 'CANCEL_AND_WAIT',
-                        'HadoopJarStep': {
-                            'Jar': 'command-runner.jar',
-                            'Args': ['spark-submit',
-                                     '--deploy-mode', 'cluster',
-                                     '--master', 'yarn',
-                                     #'--conf', 'spark.yarn.appMasterEnv.PYSPARK_PYTHON=python3',
-                                     #'--conf', 'spark.yarn.executorEnv.PYSPARK_PYTHON=python3'
-                                    # '/home/hadoop/emr_test.py',
-                                    's3://ddapi.data/emr_test.py']
-                        }
-                     }
-                 ]
-             )
+    JobFlowId=job_flow_id,
+    Steps=[
+        {
+            'Name': 'setup - copy emr test py file',
+            'ActionOnFailure': 'CANCEL_AND_WAIT',
+            'HadoopJarStep': {
+                'Jar': 'command-runner.jar',
+                'Args': ['aws', 's3', 'cp',
+                         's3://ddapi.data/emr_test.py',
+                         '/home/hadoop/']
+            }
+        },
+        {
+            'Name': 'ddapp spark app test',
+            'ActionOnFailure': 'CANCEL_AND_WAIT',
+            'HadoopJarStep': {
+                'Jar': 'command-runner.jar',
+                'Args': ['spark-submit',
+                         '--deploy-mode', 'cluster',
+                         '--master', 'yarn',
+                         's3://ddapi.data/emr_test.py']
+            }
+        }
+    ]
+)
 
 steps_id = step_response['StepIds']
-print("Step IDs:", steps_id)
+print("Step IDs Running:", steps_id)
 
 response = emr_client.terminate_job_flows(
     JobFlowIds=[
         job_flow_id,
     ]
 )
+
+# delete key after job run
+# key_del_response = client.delete_key_pair(
+#    KeyName='my-key-pair',
+# )

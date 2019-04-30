@@ -4,7 +4,7 @@ import requests
 import json
 import pandas as pd
 import boto3
-
+g
 s3_resource = boto3.resource('s3')  # w/ EMR change to download from S3
 s3_bucket = s3_resource.Bucket('ddapi.data')
 
@@ -31,7 +31,6 @@ df_1718 = spark.createDataFrame(Row(**x) for x in json1718)
 df_1819 = spark.createDataFrame(Row(**x) for x in json1819)
 
 df = df_1819.union(df_1718)
-
 
 df_1718 = pd.DataFrame(json1718)
 df_1718.head()
