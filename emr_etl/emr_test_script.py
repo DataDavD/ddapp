@@ -1,17 +1,12 @@
-from pyspark.sql import SparkSession, Row
 import boto3
-import json
-# from aws_cred import ACCESS_KEY, SECRET_KEY
 
 # connect to EMR client
 emr_client = boto3.client('emr', region_name='us-east-1')
 
 # create key for emr ec2 instance just in case need to SSH into cluster
-# ec2 = boto3.client('ec2', region_name='us-east-1')
-# create_key_response = ec2.create_key_pair(KeyName='ec2_emr_key')
+ec2 = boto3.client('ec2', region_name='us-east-1')
+create_key_response = ec2.create_key_pair(KeyName='ec2_emr_key')
 
-
-# need to refactor/format emr job calls below
 response = emr_client.run_job_flow(
     Name="ddapi EMR Cluster",
     LogUri='s3://ddapi.data/logs',
@@ -33,7 +28,7 @@ response = emr_client.run_job_flow(
                 'InstanceCount': 2,
             }
         ],
-        # 'Ec2KeyName': 'Dkan-key-supun',
+        'Ec2KeyName': 'ec2_emr_key',
         'KeepJobFlowAliveWhenNoSteps': True,
         'TerminationProtected': False,
         # 'Ec2SubnetId': 'string',
@@ -136,6 +131,4 @@ response = emr_client.terminate_job_flows(
 )
 
 # delete key after job run
-# key_del_response = client.delete_key_pair(
-#    KeyName='my-key-pair',
-# )
+key_del_response = ec2.delete_key_pair(KeyName='ec2_emr_key')

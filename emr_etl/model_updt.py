@@ -8,7 +8,6 @@ from pyspark.ml.evaluation import BinaryClassificationEvaluator
 import numpy as np
 import boto3
 import json
-import pyspark
 from aws_cred import ACCESS_KEY, SECRET_KEY
 
 spark = SparkSession \
@@ -142,75 +141,9 @@ score_gbtc = float(evaluator.evaluate(pred_gbtc,
                                       {evaluator.metricName: "areaUnderROC"}))
 print(score_gbtc)
 
-# need to use something like code below to save final model in S3 to be used by
-# api
+# need to use something like code below to save final model in S3
 
-# import os
-# import io
-
-# obj = s3_resource.Object('ddapi.data', 'modelDataFrame.json')
-# s3_resource.Object('ddapi.data', 'bestPipe/').put(Body=cvModel_gbtc.bestModel.write().overwrite())
-
-# type(cvModel_gbtc)
-
-# spark._jsc.hadoopConfiguration().set("fs.s3n.awsAccessKeyId", ACCESS_KEY)
-# spark._jsc.hadoopConfiguration().set("fs.s3n.awsSecretAccessKey", SESCRET_KEY)
-# spark._jsc.hadoopConfiguration().set("fs.s3n.endpoint", "us-east-2.amazonaws.com")
-# spark._jsc.hadoopConfiguration().set("fs.s3n.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-#spark._jsc.hadoopConfiguration().set("com.amazonaws.services.s3a.enableV4", "true")
-
-#cvModel_lgreg.bestModel.write().overwrite().save("s3a://ddapi.data/bestPipetest")
-
-#df = spark.read.csv("s3a://ddapi.data/modelDataFrame.csv")
-
-#hadoop = spark._gateway.jvm.org.apache.hadoop
-#import findspark
-#findspark.init()
-
-#df.write.parquet("s3a://ddapi.data/testdf.parquet", mode="overwrite")
-
-
-#s3_bucket.put_object(cvModel_lgreg.bestModel.write().overwrite(), Key='bestPipe/')
-# save best model to s3
-#s3_bucket = s3_resource.Bucket('ddapi.data')
-
-#for root, dirs, files in os.walk("bestPipe", topdown=False):
-#   dd = '.DS_STORE'
-   #files = [f for f in files if dd not in f]
-#   for name in files:
-#      if name != dd:
-#      #if name[0] != '.':
-#         repr(name)
-#         print(name)
-#         name
-#         type(name)
-#         print(os.path.join(root, name))
-#         d = os.path.join(root, name)
-#         s3_bucket.put_object(d, Key='bestPipe/')
-#         s3_resource.Object('ddapi.data', 'bestPipe/').put(Body=d)
-
-
-#      d = os.path.join(root, name)
-#      s3_bucket.put_object(d, Key='bestPipe/')
-
-   #for name in dirs:
-    #  print(os.path.join(root, name))
-
-#def pywalker(path):
-#    for root, dirs, files in os.walk(path):
-#        for dir in dirs:
-#            for file_ in files:
-            #    s3_bucket.upload_file(path+dir+'/'+file_, Key='bestPipe/')
-#                print(path+dir+'/'+file_)
-#pywalker('bestPipe/')
-
-
-#    file_key_name = bestPipe + '/' + filename
-#    local_path = os.getcwd()
-#    local_name = local_path + '/' + key_name + filename
-#    upload = s3_connect.upload_file(local_name, s3_bucket, file_key_name)
-
-#if score_lgreg >= score_gbtc:
+# if score_lgreg >= score_gbtc:
 #    cvModel_lgreg.bestModel.write().overwrite().save('bestPipe')
-#else:
+# else:
 #    cvModel_gbtc.bestModel.write().overwrite().save('bestPipe')

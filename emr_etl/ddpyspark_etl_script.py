@@ -4,7 +4,7 @@ import requests
 import json
 import pandas as pd
 import boto3
-g
+
 s3_resource = boto3.resource('s3')  # w/ EMR change to download from S3
 s3_bucket = s3_resource.Bucket('ddapi.data')
 
