@@ -74,8 +74,19 @@ resp = emr_client.list_clusters()
 clus = resp['Clusters'][0]
 clusID = clus['Id']
 
-create_waiter = emr_client.get_waiter('step_complete')
-try create_waiter.wait(ClusterId=clusID)
+create_waiter = emr_client.get_waiter('cluster_running')
+try:
+    create_waiter.wait(ClusterId=clusID,
+                       WaiterConfig={
+                           'Delay': 30,
+                           'MaxAttempts': 60
+                       })
+
+except WaiterError as e:
+    if 'Max attempts exceeded' in e.message:
+        print('EMR Step did not complete in 30 minutes')
+    else:
+        print(e.message)
 
 # no longer need below
 # response = emr_client.add_job_flow_steps(
@@ -133,14 +144,15 @@ step_response = emr_client.add_job_flow_steps(
 steps_id = step_response['StepIds']
 print("Step IDs Running:", steps_id)
 
-create_waiter = emr_client.get_waiter('step_complete')
+step_waiter = emr_client.get_waiter('step_complete')
 try:
-    create_waiter.wait(ClusterId=clusID,
-                       StepId=steps_id[1],
-                       WaiterConfig={
-                           'Delay': 30,
-                           'MaxAttempts': 60
-                       })
+    step_waiter.wait(ClusterId=clusID,
+                     StepId=steps_id[1],
+                     WaiterConfig={
+                         'Delay': 30,
+                         'MaxAttempts': 60
+                     })
+
 except WaiterError as e:
     if 'Max attempts exceeded' in e.message:
         print('EMR Step did not complete in 30 minutes')
@@ -152,6 +164,16 @@ response = emr_client.terminate_job_flows(
         job_flow_id,
     ]
 )
+
+spinDown_waiter = emr_client.get_waiter('cluster_terminated')
+try:
+    spinDown_waiter.wait(ClusterId=clusID)
+
+except WaiterError as e:
+    if 'Max attempts exceeded' in e.message:
+        print('EMR Step did not complete in 30 minutes')
+    else:
+        print(e.message)
 
 # delete key after job run
 key_del_response = ec2.delete_key_pair(KeyName='ec2_emr_key')
