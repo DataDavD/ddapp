@@ -1,3 +1,4 @@
+from pyspark import SparkContext
 from pyspark.sql import SparkSession, Row
 from pyspark.ml.feature import OneHotEncoderEstimator, VectorAssembler
 from pyspark.ml.feature import StringIndexer, StandardScaler
@@ -6,23 +7,26 @@ from pyspark.ml.classification import LogisticRegression, GBTClassifier
 from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 import numpy as np
-import boto3
-import json
-from aws_cred import ACCESS_KEY, SECRET_KEY
+
+sc = SparkContext(appName="ddapp_test")
 
 spark = SparkSession \
     .builder \
     .appName("DDapp_model_updt") \
     .getOrCreate()
 
-s3_resource = boto3.resource('s3')
-obj = s3_resource.Object('ddapi.data', 'modelDataFrame.json')
-data = obj.get()['Body'].read().decode()
+# s3_resource = boto3.resource('s3')
+# obj = s3_resource.Object('ddapi.data', 'modelDataFrame.json')
+# data = obj.get()['Body'].read().decode()
 
-data = json.loads(data)
+# data = json.loads(data)
+# type(data)
 
-df = spark.createDataFrame(Row(**x) for x in data)
-df.show()
+# df = spark.createDataFrame(Row(**x) for x in data)
+# df.show()
+
+df = spark.read.json('s3://ddapi.data/modelDataFrame.json')
+# df = spark.read.load('s3://ddapi.data/modelDataFrame.csv', format='csv')
 
 # train and get model score (ROC AUC) using logistic regression
 
@@ -68,8 +72,8 @@ pipeline = Pipeline(stages=[pipelineCat, pipelineNum,
                             lr])
 
 paramGrid = ParamGridBuilder()\
-    .addGrid(lr.regParam, np.arange(0, 1, .1)) \
-    .addGrid(lr.elasticNetParam, np.arange(0, 1, .1)) \
+    .addGrid(lr.regParam, np.arange(0, 1, .2)) \
+    .addGrid(lr.elasticNetParam, np.arange(0, 1, .2)) \
     .build()
 
 evaluator = BinaryClassificationEvaluator(metricName='areaUnderROC')
@@ -84,11 +88,11 @@ cvModel_lgreg = crossval.fit(trainData)
 pred_lgreg = cvModel_lgreg.transform(testData)
 score_lgreg = float(evaluator.evaluate(pred_lgreg,
                                        {evaluator.metricName: "areaUnderROC"}))
-print(score_lgreg)
+# print(score_lgreg)
 
 # train and get model score (ROC AUC) using gradient boosted tree
 
-trainData, testData = df.randomSplit([0.8, 0.2], seed=12345)
+# trainData, testData = df.randomSplit([0.8, 0.2], seed=12345)
 
 # lets first create pipeline to transform the categorical
 # and numerical columns for logistic regression
@@ -124,7 +128,7 @@ pipeline = Pipeline(stages=[pipelineCat, assemblerNum,
 
 paramGrid = ParamGridBuilder() \
     .addGrid(gbtc.subsamplingRate, np.arange(0.1, 1.0, .1)) \
-    .addGrid(gbtc.maxDepth, [1, 2, 3, 4, 5, 6, 8, 10]) \
+    .addGrid(gbtc.maxDepth, [1, 3, 5]) \
     .build()
 
 evaluator = BinaryClassificationEvaluator(metricName='areaUnderROC')
@@ -139,11 +143,11 @@ cvModel_gbtc = crossval.fit(trainData)
 pred_gbtc = cvModel_gbtc.transform(testData)
 score_gbtc = float(evaluator.evaluate(pred_gbtc,
                                       {evaluator.metricName: "areaUnderROC"}))
-print(score_gbtc)
+# print(score_gbtc)
 
 # need to use something like code below to save final model in S3
 
-# if score_lgreg >= score_gbtc:
-#    cvModel_lgreg.bestModel.write().overwrite().save('bestPipe')
-# else:
-#    cvModel_gbtc.bestModel.write().overwrite().save('bestPipe')
+if score_lgreg >= score_gbtc:
+    cvModel_lgreg.bestModel.write().save('s3://ddapi.data/bestPipe2')
+else:
+    cvModel_gbtc.bestModel.write().save('s3://ddapi.data/bestPipe2')

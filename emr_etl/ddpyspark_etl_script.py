@@ -147,7 +147,7 @@ df_total2 = (reduce(lambda df1, df2:
                                  'Date'])['homeLast5goals',
                                           'awayLast5goals',
                                           'homeLast5shots_on',
-                                          'awayLast5shots_on'].sum()
+                                          'awayLast5shots_on'].sum()  # dumbsum
 
 df_total3 = df_total2.reset_index(drop=False)
 

@@ -1,4 +1,5 @@
 import boto3
+from botocore.exceptions import WaiterError
 
 # connect to EMR client
 emr_client = boto3.client('emr', region_name='us-east-1')
@@ -66,7 +67,15 @@ response = emr_client.run_job_flow(
 )
 
 job_flow_id = response['JobFlowId']
-print("Job", job_flow_id, " is running :)")
+print("Job", job_flow_id, "is running")
+
+# get cluster id
+resp = emr_client.list_clusters()
+clus = resp['Clusters'][0]
+clusID = clus['Id']
+
+create_waiter = emr_client.get_waiter('step_complete')
+try create_waiter.wait(ClusterId=clusID)
 
 # no longer need below
 # response = emr_client.add_job_flow_steps(
@@ -103,7 +112,7 @@ step_response = emr_client.add_job_flow_steps(
             'HadoopJarStep': {
                 'Jar': 'command-runner.jar',
                 'Args': ['aws', 's3', 'cp',
-                         's3://ddapi.data/emr_test.py',
+                         's3://ddapi.data/model_updt.py',
                          '/home/hadoop/']
             }
         },
@@ -115,7 +124,7 @@ step_response = emr_client.add_job_flow_steps(
                 'Args': ['spark-submit',
                          '--deploy-mode', 'cluster',
                          '--master', 'yarn',
-                         's3://ddapi.data/emr_test.py']
+                         's3://ddapi.data/model_updt.py']
             }
         }
     ]
@@ -123,6 +132,20 @@ step_response = emr_client.add_job_flow_steps(
 
 steps_id = step_response['StepIds']
 print("Step IDs Running:", steps_id)
+
+create_waiter = emr_client.get_waiter('step_complete')
+try:
+    create_waiter.wait(ClusterId=clusID,
+                       StepId=steps_id[1],
+                       WaiterConfig={
+                           'Delay': 30,
+                           'MaxAttempts': 60
+                       })
+except WaiterError as e:
+    if 'Max attempts exceeded' in e.message:
+        print('EMR Step did not complete in 30 minutes')
+    else:
+        print(e.message)
 
 response = emr_client.terminate_job_flows(
     JobFlowIds=[

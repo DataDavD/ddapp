@@ -14,8 +14,12 @@ spark = SparkSession \
 #obj = s3_resource.Object('ddapi.data', 'modelDataFrame.json')
 #data = obj.get()['Body'].read().decode()
 
-
 df = spark.read.json('s3://ddapi.data/modelDataFrame.json')
+
+trainData, testData = df.randomSplit([0.75, 0.25], seed=12345)
+
+# df = spark.read.json('s3://ddapi.data/modelDataFrame.json')
+# df = spark.read.load('s3://ddapi.data/modelDataFrame.csv', format='csv')
 #data = json.loads(data)
 
 #df = spark.createDataFrame(Row(**x) for x in data)
@@ -26,4 +30,5 @@ df = spark.read.json('s3://ddapi.data/modelDataFrame.json')
 # s3_bucket = s3_resource.Bucket('ddapi.data')
 # s3_bucket.put_object(Body=json, Key='emr_test.json')
 
-df.write.parquet("s3://ddapi.data/test1234.parquet", mode="overwrite")
+#df.write.parquet("s3://ddapi.data/test123.parquet", mode="overwrite")
+testData.write.save("s3://ddapi.data/testData.csv", format="csv", header=True)
