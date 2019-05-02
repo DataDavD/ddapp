@@ -1,7 +1,7 @@
 from pyspark import SparkContext
-from pyspark.sql import SparkSession
-# import boto3
-# import json
+from pyspark.sql import SparkSession, Row
+import json
+import requests
 
 sc = SparkContext(appName="ddapp_test")
 
@@ -10,19 +10,29 @@ spark = SparkSession \
     .appName("DDapp_model_updt") \
     .getOrCreate()
 
-#s3_resource = boto3.resource('s3')
-#obj = s3_resource.Object('ddapi.data', 'modelDataFrame.json')
-#data = obj.get()['Body'].read().decode()
+# s3_resource = boto3.resource('s3')
+# obj = s3_resource.Object('ddapi.data', 'modelDataFrame.json')
+# data = obj.get()['Body'].read().decode()
 
-df = spark.read.json('s3://ddapi.data/modelDataFrame.json')
 
-trainData, testData = df.randomSplit([0.75, 0.25], seed=12345)
+SEASON_1718 = 'https://pkgstore.datahub.io/sports-data/' \
+              'english-premier-league/season-1718_json/data/' \
+              'dbd8d3dc57caf91d39ffe964cf31401b/season-1718_json.json'
+
+content_1718 = requests.get(SEASON_1718)
+json1718 = json.loads(content_1718.content)
+
+df_1718 = spark.createDataFrame(Row(**x) for x in json1718)
 
 # df = spark.read.json('s3://ddapi.data/modelDataFrame.json')
 # df = spark.read.load('s3://ddapi.data/modelDataFrame.csv', format='csv')
-#data = json.loads(data)
 
-#df = spark.createDataFrame(Row(**x) for x in data)
+# trainData, testData = df.randomSplit([0.75, 0.25], seed=12345)
+
+# df = spark.read.json('s3://ddapi.data/modelDataFrame.json')
+# data = json.loads(data)
+
+#d f = spark.createDataFrame(Row(**x) for x in data)
 # print('complete')
 
 # df = df.toPandas()
@@ -30,5 +40,5 @@ trainData, testData = df.randomSplit([0.75, 0.25], seed=12345)
 # s3_bucket = s3_resource.Bucket('ddapi.data')
 # s3_bucket.put_object(Body=json, Key='emr_test.json')
 
-#df.write.parquet("s3://ddapi.data/test123.parquet", mode="overwrite")
-testData.write.save("s3://ddapi.data/testData.csv", format="csv", header=True)
+# df.write.parquet("s3://ddapi.data/test123.parquet", mode="overwrite")
+df_1718.write.save("s3://ddapi.data/testSoccerData.csv", format="csv", header=True)

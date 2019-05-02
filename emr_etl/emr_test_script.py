@@ -78,8 +78,8 @@ create_waiter = emr_client.get_waiter('cluster_running')
 try:
     create_waiter.wait(ClusterId=clusID,
                        WaiterConfig={
-                           'Delay': 30,
-                           'MaxAttempts': 60
+                           'Delay': 15,
+                           'MaxAttempts': 120
                        })
 
 except WaiterError as e:
@@ -87,6 +87,8 @@ except WaiterError as e:
         print('EMR Step did not complete in 30 minutes')
     else:
         print(e.message)
+
+# don't forget to tip the waiter :)
 
 # no longer need below
 # response = emr_client.add_job_flow_steps(
@@ -123,7 +125,7 @@ step_response = emr_client.add_job_flow_steps(
             'HadoopJarStep': {
                 'Jar': 'command-runner.jar',
                 'Args': ['aws', 's3', 'cp',
-                         's3://ddapi.data/model_updt.py',
+                         's3://ddapi.data/emr_test.py',
                          '/home/hadoop/']
             }
         },
@@ -135,7 +137,7 @@ step_response = emr_client.add_job_flow_steps(
                 'Args': ['spark-submit',
                          '--deploy-mode', 'cluster',
                          '--master', 'yarn',
-                         's3://ddapi.data/model_updt.py']
+                         's3://ddapi.data/emr_test.py']
             }
         }
     ]
@@ -149,8 +151,8 @@ try:
     step_waiter.wait(ClusterId=clusID,
                      StepId=steps_id[1],
                      WaiterConfig={
-                         'Delay': 30,
-                         'MaxAttempts': 60
+                         'Delay': 15,
+                         'MaxAttempts': 240
                      })
 
 except WaiterError as e:
@@ -158,6 +160,8 @@ except WaiterError as e:
         print('EMR Step did not complete in 30 minutes')
     else:
         print(e.message)
+
+# don't forget to tip the waiter :)
 
 response = emr_client.terminate_job_flows(
     JobFlowIds=[
@@ -174,6 +178,8 @@ except WaiterError as e:
         print('EMR Step did not complete in 30 minutes')
     else:
         print(e.message)
+
+# don't forget to tip the waiter :)
 
 # delete key after job run
 key_del_response = ec2.delete_key_pair(KeyName='ec2_emr_key')

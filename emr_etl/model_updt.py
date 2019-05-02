@@ -148,6 +148,6 @@ score_gbtc = float(evaluator.evaluate(pred_gbtc,
 # need to use something like code below to save final model in S3
 
 if score_lgreg >= score_gbtc:
-    cvModel_lgreg.bestModel.write().save('s3://ddapi.data/bestPipe2')
+    cvModel_lgreg.bestModel.write().overwrite().save('s3://ddapi.data/bestPipe2')
 else:
-    cvModel_gbtc.bestModel.write().save('s3://ddapi.data/bestPipe2')
+    cvModel_gbtc.bestModel.write().overwrite().save('s3://ddapi.data/bestPipe2')

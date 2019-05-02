@@ -96,6 +96,7 @@ jedi==0.13.3
 Jinja2==2.10
 jmespath==0.9.4
 json-merge-patch==0.2
+jsonlines==1.2.0
 jsonschema==2.6.0
 jupyter==1.0.0
 jupyter-client==5.2.4
@@ -156,7 +157,7 @@ psutil==5.5.0
 ptyprocess==0.6.0
 py==1.8.0
 py4j==0.10.7
-pyarrow==0.12.1
+pyarrow==0.13.0
 pyasn1==0.4.5
 pyasn1-modules==0.2.4
 pycodestyle==2.5.0
