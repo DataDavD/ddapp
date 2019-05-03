@@ -18,34 +18,30 @@ spark = SparkSession \
 
 spark.conf.set("spark.sql.execution.arrow.enabled", "true")
 
-#SEASON_1819 = 'https://pkgstore.datahub.io/sports-data/' \
-#              'english-premier-league/season-1819_json/data/' \
-#              '121aec954d44d69659e8da82196f0997/season-1819_json.json'
+SEASON_1819 = 'https://pkgstore.datahub.io/sports-data/' \
+              'english-premier-league/season-1819_json/data/' \
+              '121aec954d44d69659e8da82196f0997/season-1819_json.json'
 
-#SEASON_1718 = 'https://pkgstore.datahub.io/sports-data/' \
-#              'english-premier-league/season-1718_json/data/' \
-#              'dbd8d3dc57caf91d39ffe964cf31401b/season-1718_json.json'
+SEASON_1718 = 'https://pkgstore.datahub.io/sports-data/' \
+              'english-premier-league/season-1718_json/data/' \
+              'dbd8d3dc57caf91d39ffe964cf31401b/season-1718_json.json'
 
-#content_1718 = requests.get(SEASON_1718)
-#json1718 = json.loads(content_1718.content)
+content_1718 = requests.get(SEASON_1718)
+json1718 = json.loads(content_1718.content)
 
-#content_1819 = requests.get(SEASON_1819)
-#json1819 = json.loads(content_1819.content)
+content_1819 = requests.get(SEASON_1819)
+json1819 = json.loads(content_1819.content)
 
-#df_1718 = spark.createDataFrame(Row(**x) for x in json1718)
-#df_1819 = spark.createDataFrame(Row(**x) for x in json1819)
-df_1718 = spark.read.load('s3://ddapi.data/season-1718.csv', format='csv')
-df_1819 = spark.read.load('s3://ddapi.data/season-1819.csv', format='csv')
-df_1718 = df_1718.toPandas()
-df_1819 = df_1819.toPandas()
+df_1718 = spark.createDataFrame(Row(**x) for x in json1718)
+df_1819 = spark.createDataFrame(Row(**x) for x in json1819)
 
-# df = df_1819.union(df_1718)
+df = df_1819.union(df_1718)
 
-# f_1718 = pd.DataFrame(json1718)
-# df_1718.head()
+df_1718 = pd.DataFrame(json1718)
+df_1718.head()
 
-# df_1819 = pd.DataFrame(json1819)
-# df_1819.head()
+df_1819 = pd.DataFrame(json1819)
+df_1819.head()
 
 df_1718_teams = set(df_1718.HomeTeam.unique().tolist())
 df_1819_teams = set(df_1819.HomeTeam.unique().tolist())
@@ -174,7 +170,7 @@ df_final = df_final.drop(columns=['Date'])  # then drop Date
 
 # convert back to spark data to easily upload to S3, fix/refactor ASAP
 df_out = spark.createDataFrame(df_final)
-df_out.write.save("s3://ddapi.data/etl_out.csv", format="csv", header=True)
+df_out.write.save("s3://ddapi.data/etl_out.csv", format="csv", header=True, mode="overwrite")
 
 # send json to s3 bucket
 # json = df_final.to_json(orient='records')

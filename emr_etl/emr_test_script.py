@@ -7,9 +7,12 @@ emr_client = boto3.client('emr', region_name='us-east-1')
 # create key for emr ec2 instance just in case need to SSH into cluster
 ec2 = boto3.client('ec2', region_name='us-east-1')
 create_key_response = ec2.create_key_pair(KeyName='ec2_emr_key')
+unkey = str(create_key_response['KeyMaterial'])
+with open('testkey.pem', 'w') as f:
+    f.write(unkey)
 
 response = emr_client.run_job_flow(
-    Name="ddapi EMR Cluster",
+    Name="ddapi EMR Cluster4",
     LogUri='s3://ddapi.data/logs',
     ReleaseLabel='emr-5.23.0',
     Instances={
@@ -52,16 +55,27 @@ response = emr_client.run_job_flow(
     Configurations=[
         {
             "Classification": "spark-env",
-            "Properties": {},
             "Configurations": [
                 {
                     "Classification": "export",
                     "Properties": {
-                        "PYSPARK_PYTHON": "/usr/bin/python3"
-                    },
-                    "Configurations": []
+                        "PYSPARK_PYTHON": "/usr/bin/python3",
+                        "PYSPARK_DRIVER_PYTHON": "/usr/bin/python3"
+                        }
                 }
             ]
+        },
+        {
+            "Classification": "spark-defaults",
+            "Properties": {
+                "spark.sql.execution.arrow.enabled": "true"
+                }
+        },
+        {
+            "Classification": "spark",
+            "Properties": {
+                "maximizeResourceAllocation": "true"
+                }
         }
     ],
 )
@@ -105,7 +119,7 @@ except WaiterError as e:
 #            }
 #        },
 #        {
-#            'Name': 'setup pyspark with conda',
+#            'Name': 'setup pyspark w python3',
 #            'ActionOnFailure': 'CANCEL_AND_WAIT',
 #            'HadoopJarStep': {
 #                'Jar': 'command-runner.jar',
@@ -125,7 +139,7 @@ step_response = emr_client.add_job_flow_steps(
             'HadoopJarStep': {
                 'Jar': 'command-runner.jar',
                 'Args': ['aws', 's3', 'cp',
-                         's3://ddapi.data/emr_test.py',
+                         's3://ddapi.data/ddpyspark_etl_script.py',
                          '/home/hadoop/']
             }
         },
@@ -137,7 +151,7 @@ step_response = emr_client.add_job_flow_steps(
                 'Args': ['spark-submit',
                          '--deploy-mode', 'cluster',
                          '--master', 'yarn',
-                         's3://ddapi.data/emr_test.py']
+                         's3://ddapi.data/ddpyspark_etl_script.py']
             }
         }
     ]
