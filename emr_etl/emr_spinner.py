@@ -104,31 +104,6 @@ except WaiterError as e:
 
 # don't forget to tip the waiter :)
 
-# no longer need below
-# response = emr_client.add_job_flow_steps(
-#    JobFlowId=job_flow_id,
-#    Steps=[
-#        {
-#            'Name': 'setup - copy files',
-#            'ActionOnFailure': 'CANCEL_AND_WAIT',
-#            'HadoopJarStep': {
-#                'Jar': 'command-runner.jar',
-#                'Args': ['aws', 's3', 'cp',
-#                         's3://ddapi.data/pyspark_setup.sh',
-#                         '/home/hadoop/']
-#            }
-#        },
-#        {
-#            'Name': 'setup pyspark w python3',
-#            'ActionOnFailure': 'CANCEL_AND_WAIT',
-#            'HadoopJarStep': {
-#                'Jar': 'command-runner.jar',
-#                'Args': ['sudo', 'bash', '/home/hadoop/pyspark_setup.sh']
-#            }
-#        }
-#    ]
-# )
-# no longer need above
 
 step_response = emr_client.add_job_flow_steps(
     JobFlowId=job_flow_id,
@@ -178,10 +153,8 @@ except WaiterError as e:
 # don't forget to tip the waiter :)
 
 response = emr_client.terminate_job_flows(
-    JobFlowIds=[
-        job_flow_id,
-    ]
-)
+    JobFlowIds=[job_flow_id]
+    )
 
 spinDown_waiter = emr_client.get_waiter('cluster_terminated')
 try:
