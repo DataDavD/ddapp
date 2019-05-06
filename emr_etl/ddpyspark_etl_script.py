@@ -4,8 +4,9 @@ from functools import reduce
 import requests
 import json
 import pandas as pd
-# import boto3
 
+# keep for now, for use testing on local
+# import boto3
 # s3_resource = boto3.resource('s3')  # w/ EMR change to download from S3
 # s3_bucket = s3_resource.Bucket('ddapi.data')
 
@@ -135,6 +136,7 @@ pandas_dict = {}
 for key, spark_sqlDF in spdf_dict.items():
     pandas_dict[key] = spdf_dict[key].toPandas()
 
+# little tests, delete later
 # pandas_dict['Arsenal_sql'].head()
 # pandas_dict['Arsenal_sql'].info()
 # df_total.head()
@@ -170,8 +172,12 @@ df_final = df_final.drop(columns=['Date'])  # then drop Date
 
 # convert back to spark data to easily upload to S3, fix/refactor ASAP
 df_out = spark.createDataFrame(df_final)
-df_out.write.save("s3://ddapi.data/etl_out.csv", format="csv", header=True, mode="overwrite")
+df_out.write.save("s3://ddapi.data/etl_out.csv",
+                  format="csv",
+                  header=True,
+                  mode="overwrite")
 
+# keep for now, for use testing on local
 # send json to s3 bucket
 # json = df_final.to_json(orient='records')
 # s3_bucket.put_object(Body=json, Key='modelDataFrame.json')

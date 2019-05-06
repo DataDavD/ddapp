@@ -16,7 +16,7 @@ spark = SparkSession \
     .appName("pysparkDDapp") \
     .getOrCreate()
 
-bestPipe = PipelineModel.load('bestPipeLogReg')
+bestPipe = PipelineModel.load('bestPipe')
 
 
 ddapp = Flask(__name__)

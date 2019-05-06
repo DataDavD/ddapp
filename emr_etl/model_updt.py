@@ -1,5 +1,5 @@
 from pyspark import SparkContext
-from pyspark.sql import SparkSession, Row
+from pyspark.sql import SparkSession
 from pyspark.ml.feature import OneHotEncoderEstimator, VectorAssembler
 from pyspark.ml.feature import StringIndexer, StandardScaler
 from pyspark.ml import Pipeline
@@ -15,23 +15,13 @@ spark = SparkSession \
     .appName("DDapp_model_updt") \
     .getOrCreate()
 
-# s3_resource = boto3.resource('s3')
-# obj = s3_resource.Object('ddapi.data', 'modelDataFrame.json')
-# data = obj.get()['Body'].read().decode()
-
-# data = json.loads(data)
-# type(data)
-
-# df = spark.createDataFrame(Row(**x) for x in data)
-# df.show()
-
 df = spark.read.json('s3://ddapi.data/modelDataFrame.json')
 # df = spark.read.load('s3://ddapi.data/modelDataFrame.csv', format='csv')
 
-# train and get model score (ROC AUC) using logistic regression
-
+# split data first
 trainData, testData = df.randomSplit([0.75, 0.25], seed=12345)
 
+# train and get model score (ROC AUC) using logistic regression
 # lets first create pipeline to transform the categorical
 # and numerical columns for logistic regression
 
@@ -81,19 +71,15 @@ evaluator = BinaryClassificationEvaluator(metricName='areaUnderROC')
 crossval = CrossValidator(estimator=pipeline,
                           estimatorParamMaps=paramGrid,
                           evaluator=evaluator,
-                          numFolds=3)  # don't have much data yet
+                          numFolds=3)
 
-cvModel_lgreg = crossval.fit(trainData)
+cvModel_lgrg = crossval.fit(trainData)
 
-pred_lgreg = cvModel_lgreg.transform(testData)
+pred_lgreg = cvModel_lgrg.transform(testData)
 score_lgreg = float(evaluator.evaluate(pred_lgreg,
                                        {evaluator.metricName: "areaUnderROC"}))
-# print(score_lgreg)
 
 # train and get model score (ROC AUC) using gradient boosted tree
-
-# trainData, testData = df.randomSplit([0.8, 0.2], seed=12345)
-
 # lets first create pipeline to transform the categorical
 # and numerical columns for logistic regression
 
@@ -143,11 +129,8 @@ cvModel_gbtc = crossval.fit(trainData)
 pred_gbtc = cvModel_gbtc.transform(testData)
 score_gbtc = float(evaluator.evaluate(pred_gbtc,
                                       {evaluator.metricName: "areaUnderROC"}))
-# print(score_gbtc)
-
-# need to use something like code below to save final model in S3
 
 if score_lgreg >= score_gbtc:
-    cvModel_lgreg.bestModel.write().overwrite().save('s3://ddapi.data/bestPipe2')
+    cvModel_lgrg.bestModel.write().overwrite().save('s3://ddapi.data/bestPipe')
 else:
-    cvModel_gbtc.bestModel.write().overwrite().save('s3://ddapi.data/bestPipe2')
+    cvModel_gbtc.bestModel.write().overwrite().save('s3://ddapi.data/bestPipe')
