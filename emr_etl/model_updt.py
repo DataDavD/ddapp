@@ -11,7 +11,7 @@ import numpy as np
 
 def main():
     """
-    main model function to train models and and save best one to S3
+    main script function to train models and and save best one to S3
     """
     sc = SparkContext(appName="ddapp_test")
 
@@ -20,8 +20,8 @@ def main():
         .appName("DDapp_model_updt") \
         .getOrCreate()
 
-    df = spark.read.json('s3://ddapi.data/modelDataFrame.json')
-    # df = spark.read.load('s3://ddapi.data/modelDataFrame.csv', format='csv')
+    # df = spark.read.json('s3://ddapi.data/etl_out.json')
+    df = spark.read.load('s3://ddapi.data/etl_out.csv', format='csv')
 
     # split data first
     trainData, testData = df.randomSplit([0.75, 0.25], seed=12345)
@@ -146,3 +146,7 @@ def main():
         cvModel_gbtc.bestModel.write() \
                               .overwrite() \
                               .save('s3://ddapi.data/bestPipe')
+
+
+if __name__ == '__main__':
+    main()
