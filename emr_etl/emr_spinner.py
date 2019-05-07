@@ -6,24 +6,21 @@ class ClusterFun:
     """
     Class used to represent EMR cluster creation, job submission (spark),
     and spin down.
-
-    Attributes
-
-    :param region: region to deploy EMR cluster, use std aws naming convention
-    :type region: str
-    :returns: list of emr client and ec2 client response; used in job flow
     """
 
     # Initializer / Instance Attributes
     def __init__(self,
                  region='us-east-1',
-                 clustername='ClusterFun EMR Cluster'):
+                 clustername='ClusterFun EMR Cluster',
+                 logpath='s3://ddapi.data/logs'):
         self.region = region
         self.emr_client = boto3.client('emr', region_name=region)
         # create key for emr ec2 instance just in case need to SSH into cluster
         self.ec2 = boto3.client('ec2', region_name='us-east-1')
         self.key = 'emr_key'
         self.create_key_response = self.ec2.create_key_pair(KeyName=self.key)
+        self.clustername = clustername
+        self.logpath = logpath
 
     # write key-pair pem file method
     def storeKey(self, pem_path='emr_keypair.pem'):
@@ -38,8 +35,8 @@ class ClusterFun:
     # cluster spin up method
     def spinUp(self):
         response = self.emr_client.run_job_flow(
-            Name="ddapi EMR Cluster",
-            LogUri='s3://ddapi.data/logs',
+            Name=self.clustername,
+            LogUri=self.logpath,
             ReleaseLabel='emr-5.23.0',
             Instances={
                 'InstanceGroups': [
@@ -113,6 +110,7 @@ class ClusterFun:
         clus = resp['Clusters'][0]
         self.clusID = clus['Id']
 
+        # don't forget to tip the waiter
         create_waiter = self.emr_client.get_waiter('cluster_running')
         try:
             create_waiter.wait(ClusterId=self.clusID,
@@ -127,71 +125,68 @@ class ClusterFun:
             else:
                 print(e.message)
 
-# don't forget to tip the waiter :)
+    def submaster(self):
+        step_response = self.emr_client.add_job_flow_steps(
+            JobFlowId=self.job_flow_id,
+            Steps=[
+                {
+                    'Name': 'setup - copy emr test py file',
+                    'ActionOnFailure': 'CANCEL_AND_WAIT',
+                    'HadoopJarStep': {
+                        'Jar': 'command-runner.jar',
+                        'Args': ['aws', 's3', 'cp',
+                                 's3://ddapi.data/ddpyspark_etl_script.py',
+                                 '/home/hadoop/']
+                    }
+                },
+                {
+                    'Name': 'ddapp spark app test',
+                    'ActionOnFailure': 'CANCEL_AND_WAIT',
+                    'HadoopJarStep': {
+                        'Jar': 'command-runner.jar',
+                        'Args': ['spark-submit',
+                                 '--deploy-mode', 'cluster',
+                                 '--master', 'yarn',
+                                 's3://ddapi.data/ddpyspark_etl_script.py']
+                        }
+                }
+            ]
+            )
 
+        self.submaster_step_id = step_response['StepIds']
+        print("Step IDs Running:", self.submaster_step_id)
 
-step_response = emr_client.add_job_flow_steps(
-    JobFlowId=self.job_flow_id,
-    Steps=[
-        {
-            'Name': 'setup - copy emr test py file',
-            'ActionOnFailure': 'CANCEL_AND_WAIT',
-            'HadoopJarStep': {
-                'Jar': 'command-runner.jar',
-                'Args': ['aws', 's3', 'cp',
-                         's3://ddapi.data/ddpyspark_etl_script.py',
-                         '/home/hadoop/']
-            }
-        },
-        {
-            'Name': 'ddapp spark app test',
-            'ActionOnFailure': 'CANCEL_AND_WAIT',
-            'HadoopJarStep': {
-                'Jar': 'command-runner.jar',
-                'Args': ['spark-submit',
-                         '--deploy-mode', 'cluster',
-                         '--master', 'yarn',
-                         's3://ddapi.data/ddpyspark_etl_script.py']
-            }
-        }
-    ]
-)
+        # don't forget to tip the waiter :)
+        step_waiter = self.emr_client.get_waiter('step_complete')
+        try:
+            step_waiter.wait(ClusterId=self.clusID,
+                             StepId=self.submaster_step_id[1],
+                             WaiterConfig={
+                                 'Delay': 15,
+                                 'MaxAttempts': 240
+                             })
 
-steps_id = step_response['StepIds']
-print("Step IDs Running:", steps_id)
+        except WaiterError as e:
+            if 'Max attempts exceeded' in e.message:
+                print('EMR Step did not complete in 30 minutes')
+            else:
+                print(e.message)
 
-step_waiter = emr_client.get_waiter('step_complete')
-try:
-    step_waiter.wait(ClusterId=self.clusID,
-                     StepId=steps_id[1],
-                     WaiterConfig={
-                         'Delay': 15,
-                         'MaxAttempts': 240
-                     })
+    def spinDown(self):
+        response = self.emr_client.terminate_job_flows(
+            JobFlowIds=[self.job_flow_id]
+            )
+        # don't forget to tip the waiter :)
+        spinDown_waiter = self.emr_client.get_waiter('cluster_terminated')
+        try:
+            spinDown_waiter.wait(ClusterId=self.clusID)
 
-except WaiterError as e:
-    if 'Max attempts exceeded' in e.message:
-        print('EMR Step did not complete in 30 minutes')
-    else:
-        print(e.message)
+        except WaiterError as e:
+            if 'Max attempts exceeded' in e.message:
+                print('EMR Step did not complete in 30 minutes')
+            else:
+                print(e.message)
 
-# don't forget to tip the waiter :)
-
-response = self.emr_client.terminate_job_flows(
-    JobFlowIds=[self.job_flow_id]
-    )
-
-spinDown_waiter = self.emr_client.get_waiter('cluster_terminated')
-try:
-    spinDown_waiter.wait(ClusterId=self.clusID)
-
-except WaiterError as e:
-    if 'Max attempts exceeded' in e.message:
-        print('EMR Step did not complete in 30 minutes')
-    else:
-        print(e.message)
-
-# don't forget to tip the waiter :)
-
-# delete key after job run
-key_del_response = ec2.delete_key_pair(KeyName=self.key)
+    # cluster key-pair delete method
+    def deleteKey(self):
+        self.key_del_response = self.ec2.delete_key_pair(KeyName=self.key)
