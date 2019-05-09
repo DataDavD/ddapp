@@ -16,10 +16,27 @@ class ClusterFun:
     logpath : str
         S3 path to store EMR Cluster logs
 
-    storeKey
+    Methods
     -------
-    says(sound=None)
-        Prints the animals name and what sound it makes
+    storeKey(pem_path='emr_keypair.pem')
+        saves ec2 key-pair pem file to specified Path
+    spinUp(self,
+               btstrap_loc='s3://ddapi.data/ddapp_emr_bootstrap.sh',
+               mstr_cnt=1,
+               mstr_mkt='ON_DEMAND',
+               slave_cnt=2,
+               slave_mkt='ON_DEMAND',
+               )
+        spins up EMR Cluster to user specifications
+    __step_waiter(step_id)
+        private method for waiting on EMR job flow steps to complete
+    spksub_step(self,
+                s3_file_path='s3://ddapi.data/ddpyspark_etl_script.py')
+        submits spark job as EMR job flow step
+    spinDown()
+        spins down EMR Cluster
+    deleteKey()
+        deletes EC2 Master node key-pair
     """
 
     # Initializer / Instance Attributes
