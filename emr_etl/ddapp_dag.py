@@ -2,9 +2,9 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
-import emr_spinner
-import ddpyspark_etl_script
-import model_updt
+from emr_etl.emr_spinner import ClusterFun
+
+clust = ClusterFun()
 
 default_args = {
     'owner': 'ddapp',
@@ -22,23 +22,20 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag = DAG(dag_id='dd_test_v1',
-          default_args=default_args,
-          schedule_interval=timedelta(days=7))
+with DAG(dag_id='dd_test_v1',
+         default_args=default_args,
+         schedule_interval=timedelta(days=7)) as dag:
 
-t1 = PythonOperator(
-    task_id='py_1',
-    python_callable=emr_spinner,
-    dag=dag)
+    t1 = PythonOperator(task_id='EMR_spin_up',
+                        python_callable=clust.spinUp,
+                        dag=dag)
 
-t2 = PythonOperator(
-    task_id='py_2',
-    python_callable=ddpyspark_etl_script,
-    dag=dag)
+    t2 = PythonOperator(task_id='EMR_spark_submit_1',
+                        python_callable=clust.spksub_step,
+                        dag=dag)
 
-t3 = PythonOperator(
-    task_id='py_3',
-    python_callable=model_updt,
-    dag=dag)
+    t3 = PythonOperator(task_id='EMR_spin_down',
+                        python_callable=clust.spinDown,
+                        dag=dag)
 
 t1 >> t2 >> t3
