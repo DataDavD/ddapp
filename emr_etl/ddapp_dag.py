@@ -34,8 +34,15 @@ with DAG(dag_id='dd_test_v1',
                         python_callable=clust.spksub_step,
                         dag=dag)
 
-    t3 = PythonOperator(task_id='EMR_spin_down',
+    t3 = PythonOperator(task_id='EMR_spark_submit_1',
+                        python_callable=clust.spksub_step,
+                        op_kwargs={
+                            's3_file_path': 's3://ddapi.data/model_updt.py'
+                            },
+                        dag=dag)
+
+    t4 = PythonOperator(task_id='EMR_spin_down',
                         python_callable=clust.spinDown,
                         dag=dag)
 
-t1 >> t2 >> t3
+t1 >> t2 >> t3 >> t4
