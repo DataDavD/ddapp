@@ -8,15 +8,6 @@ class ClusterFun:
     Class used to represent EMR cluster creation, job submission (spark),
     and spin down.
 
-    Attributes
-    ----------
-    region : str
-        specify AWS region
-    clustername : str
-        name of EMR cluster
-    logpath : str
-        S3 path to store EMR Cluster logs
-
     Methods
     -------
     storeKey(pem_path='emr_keypair.pem')
@@ -47,6 +38,22 @@ class ClusterFun:
                  SECRET_KEY=SECRET_KEY,
                  clustername='ClusterFun EMR Cluster',
                  logpath='s3://ddapi.data/logs'):
+        """
+        Parameters
+        ----------
+        region : str, optional
+            AWS region (default is 'us-east-1')
+        ACCESS_KEY: str
+            user's AWS access key ID
+        SECRET_KEY: str
+            user's AWS secrete access key ID
+        clustername : str, optional
+            name of EMR cluster (default is 'ClusterFun EMR Cluster')
+        logpath : str, optional
+            S3 path to store EMR Cluster logs
+            (default is 's3://ddapi.data/logs')
+        """
+
         self.region = region
         self.emr_client = boto3.client('emr',
                                        aws_access_key_id=ACCESS_KEY,
@@ -71,6 +78,22 @@ class ClusterFun:
 
     # write key-pair pem file method
     def storeKey(self, pem_path='emr_keypair.pem'):
+        """
+        Saves the aws key-pair pem file to user specified path & path. Default
+        path is current working directory.  Default file name is
+        emr_keypair.pem
+
+        Parameters
+        ----------
+        pem_path : str, optional
+            Path and file name to save key-pair pem (default is
+            'emr_keypair.pem')
+
+        Raises
+        ------
+        TypeError
+            If pem_path parameter is not a string
+        """
         if not isinstance(pem_path, str):
             raise TypeError('pem_path must be string')
         else:
@@ -87,6 +110,24 @@ class ClusterFun:
                slave_cnt=2,
                slave_mkt='ON_DEMAND',
                ):
+        """
+        Spins up EMR Cluster
+
+        Parameters
+        ----------
+        btstrap_loc : str
+            S3 location of bootstrap bash script
+            (default is 's3://ddapi.data/ddapp_emr_bootstrap.sh')
+        mstr_cnt: int, optional
+            master node count (default is 1)
+        mstr_mkt: str, optional
+            master market type (default is 'ON_DEMAND')
+        slave_cnt: int, optional
+            slave node count (default is 1)
+        slave_mkt: str, optional
+            slave market type (default is 'ON_DEMAND')
+        """
+
         self.btstrap_loc = btstrap_loc
         response = self.emr_client.run_job_flow(
             Name=self.clustername,
@@ -181,8 +222,14 @@ class ClusterFun:
 
     def __step_waiter(self, step_id):
         """
-        step waiter for spksub_set func
+        Private class method for waiting on EMR job flow steps
+
+        Parameters
+        ----------
+        step_id : str
+            jobflow step_id of current running step
         """
+
         # don't forget to tip the waiter :)
         step_waiter = self.emr_client.get_waiter('step_complete')
         try:
@@ -201,6 +248,16 @@ class ClusterFun:
 
     def spksub_step(self,
                     s3_file_path='s3://ddapi.data/ddpyspark_etl_script.py'):
+        """
+        Runs jobflow step on running EMR cluster
+
+        Parameters
+        ----------
+        s3_file_path : str
+            S3 location of PySpark script
+            (default is 's3://ddapi.data/ddapp_emr_bootstrap.sh'))
+        """
+
         step_response = self.emr_client.add_job_flow_steps(
             JobFlowId=self.job_flow_id,
             Steps=[
@@ -224,9 +281,11 @@ class ClusterFun:
         self.__step_waiter(step_id=spksub_step_id)
 
     def spinDown(self):
-        response = self.emr_client.terminate_job_flows(
-            JobFlowIds=[self.job_flow_id]
-            )
+        """
+        Spins down running EMR cluster
+        """
+
+        self.emr_client.terminate_job_flows(JobFlowIds=[self.job_flow_id])
         # don't forget to tip the waiter :)
         spinDown_waiter = self.emr_client.get_waiter('cluster_terminated')
         try:
@@ -240,4 +299,8 @@ class ClusterFun:
 
     # cluster key-pair delete method
     def deleteKey(self):
+        """
+        Deletes key-pair created in EMR cluster created in __init__
+        """
+
         self.key_del_response = self.ec2.delete_key_pair(KeyName=self.key)
