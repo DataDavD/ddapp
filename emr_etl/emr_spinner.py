@@ -1,5 +1,6 @@
 import boto3
 from botocore.exceptions import WaiterError
+from aws_cred import ACCESS_KEY, SECRET_KEY
 
 
 class ClusterFun:
@@ -42,12 +43,20 @@ class ClusterFun:
     # Initializer / Instance Attributes
     def __init__(self,
                  region='us-east-1',
+                 ACCESS_KEY=ACCESS_KEY,
+                 SECRET_KEY=SECRET_KEY,
                  clustername='ClusterFun EMR Cluster',
                  logpath='s3://ddapi.data/logs'):
         self.region = region
-        self.emr_client = boto3.client('emr', region_name=region)
+        self.emr_client = boto3.client('emr',
+                                       aws_access_key_id=ACCESS_KEY,
+                                       aws_secret_access_key=SECRET_KEY,
+                                       region_name=region)
         # create key for emr ec2 instance just in case need to SSH into cluster
-        self.ec2 = boto3.client('ec2', region_name='us-east-1')
+        self.ec2 = boto3.client('ec2',
+                                aws_access_key_id=ACCESS_KEY,
+                                aws_secret_access_key=SECRET_KEY,
+                                region_name='us-east-1')
         self.key = 'emr_key'
         self.create_key_response = self.ec2.create_key_pair(KeyName=self.key)
         self.clustername = clustername
