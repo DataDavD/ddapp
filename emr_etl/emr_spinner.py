@@ -305,7 +305,6 @@ class ClusterFun:
             else:
                 print(e.message)
 
-    # cluster key-pair delete method
     def deleteKey(self):
         """
         Deletes key-pair created in EMR cluster created in __init__
