@@ -1,6 +1,9 @@
+import logging
 import boto3
 from botocore.exceptions import WaiterError
 from aws_cred import ACCESS_KEY, SECRET_KEY
+
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
 
 class ClusterFun:
@@ -59,15 +62,19 @@ class ClusterFun:
                                        aws_access_key_id=ACCESS_KEY,
                                        aws_secret_access_key=SECRET_KEY,
                                        region_name=region)
+        logging.info(f'connecting to emr_client: {self.emr_client}')
         # create key for emr ec2 instance just in case need to SSH into cluster
         self.ec2 = boto3.client('ec2',
                                 aws_access_key_id=ACCESS_KEY,
                                 aws_secret_access_key=SECRET_KEY,
                                 region_name='us-east-1')
+        logging.info(f'connecting to ec2_client: {self.ec2}')
         self.key = 'emr_key'
         self.create_key_response = self.ec2.create_key_pair(KeyName=self.key)
+        logging.info('emr ec2 key created')
         self.clustername = clustername
         self.logpath = logpath
+        logging.info(f'logging path set to {self.logpath}')
 
     def __repr__(self):
         return (f'{self.__class__.__name__}('
@@ -94,13 +101,15 @@ class ClusterFun:
         TypeError
             If pem_path parameter is not a string
         """
-        if not isinstance(pem_path, str):
-            raise TypeError('pem_path must be string')
-        else:
+        try:
+            isinstance(pem_path, str)
             self.pem_path = pem_path
             emr_keypem = str(self.create_key_response['KeyMaterial'])
             with open(pem_path, 'w') as f:
                 f.write(emr_keypem)
+        except TypeError as error:
+            print(f'Error occurred: {error}; pem_path must be str')
+            logging.error(f'Error occurred: {error}; pem_path must be str', exc_info=True)
 
     # cluster spin up method
     def spinUp(self,
@@ -276,7 +285,6 @@ class ClusterFun:
             )
 
         spksub_step_id = step_response['StepIds']
-        print("Step IDs Running:", spksub_step_id)
 
         self.__step_waiter(step_id=spksub_step_id)
 
