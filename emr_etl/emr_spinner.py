@@ -16,12 +16,11 @@ class ClusterFun:
     storeKey(pem_path='emr_keypair.pem')
         saves ec2 key-pair pem file to specified Path
     spinUp(self,
-               btstrap_loc='s3://ddapi.data/ddapp_emr_bootstrap.sh',
-               mstr_cnt=1,
-               mstr_mkt='ON_DEMAND',
-               slave_cnt=2,
-               slave_mkt='ON_DEMAND',
-               )
+           btstrap_loc='s3://ddapi.data/ddapp_emr_bootstrap.sh',
+           mstr_cnt=1,
+           mstr_mkt='ON_DEMAND',
+           slave_cnt=2,
+           slave_mkt='ON_DEMAND')
         spins up EMR Cluster to user specifications
     __step_waiter(step_id)
         private method for waiting on EMR job flow steps to complete
@@ -138,6 +137,7 @@ class ClusterFun:
         """
 
         self.btstrap_loc = btstrap_loc
+        logging.info(f'starting to spin up emr cluster from emr client: {self.emr_client}')
         response = self.emr_client.run_job_flow(
             Name=self.clustername,
             LogUri=self.logpath,
@@ -206,8 +206,9 @@ class ClusterFun:
                 }
             ],
             )
-
+        logging.info(f'spinning up emr cluster from emr client: {self.emr_client}')
         self.job_flow_id = response['JobFlowId']
+        logging.info(f'job flow id {self.emr_client} logged')
 
         # get cluster id
         resp = self.emr_client.list_clusters()
@@ -215,6 +216,7 @@ class ClusterFun:
         self.clusID = clus['Id']
 
         # don't forget to tip the waiter
+        logging.info(f'start waiter')
         create_waiter = self.emr_client.get_waiter('cluster_running')
         try:
             create_waiter.wait(ClusterId=self.clusID,
