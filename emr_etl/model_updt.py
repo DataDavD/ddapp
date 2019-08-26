@@ -1,4 +1,4 @@
-from pyspark import SparkContext
+#from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.ml.feature import OneHotEncoderEstimator, VectorAssembler
 from pyspark.ml.feature import StringIndexer, StandardScaler
@@ -13,16 +13,14 @@ def main():
     """
     main script function to train models and and save best one to S3
     """
-    sc = SparkContext(appName="ddapp_test")
+    #sc = SparkContext(appName="ddapp_test")
 
     spark = SparkSession \
         .builder \
         .appName("DDapp_model_updt") \
         .getOrCreate()
 
-    # df = spark.read.json('s3://ddapi.data/etl_out.json')
-    df = spark.read.load('s3://ddapi.data/etl_out.csv', format='csv')
-
+    df = spark.read.parquet("s3://ddapi.data/etl_out.parquet")
     # split data first
     trainData, testData = df.randomSplit([0.75, 0.25], seed=12345)
 

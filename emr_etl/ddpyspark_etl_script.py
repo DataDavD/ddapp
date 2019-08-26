@@ -1,4 +1,3 @@
-from pyspark import SparkContext
 from pyspark.sql import SparkSession, Row
 from functools import reduce
 import requests
@@ -16,8 +15,6 @@ def main():
     # import boto3
     # s3_resource = boto3.resource('s3')  # w/ EMR change to download from S3
     # s3_bucket = s3_resource.Bucket('ddapi.data')
-
-    sc = SparkContext(appName="pysparkDDapp")
 
     spark = SparkSession \
         .builder \
@@ -100,7 +97,6 @@ def main():
         dfteam2 = dfteam[['Date', 'team', 'last5goals', 'last5shots_on']]
 
         return dfteam2
-
 
     df_dict = {}
     for team in teamList:
@@ -188,10 +184,8 @@ def main():
 
     # convert back to spark data to easily upload to S3, fix/refactor ASAP
     df_out = spark.createDataFrame(df_final)
-    df_out.write.save("s3://ddapi.data/etl_out.csv",
-                      format="csv",
-                      header=True,
-                      mode="overwrite")
+
+    df_out.write.parquet("s3://ddapi.data/etl_out.parquet")
 
     # keep for now, for use testing on local
     # send json to s3 bucket
