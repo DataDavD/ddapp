@@ -25,11 +25,11 @@ api = Api(app=ddapp,
           title='Total Goals Predictor',
           description='Flask API that serves PySpark LogReg model predictions')
 
-lrmod = api.namespace('lrmodel',
-                      description='API used to predict total goals of match')
+mod = api.namespace('model',
+                    description='API used to predict total goals of match')
 
 
-@lrmod.route("/")
+@mod.route("/")
 class LogReg(Resource):
     def post(self):
         """
