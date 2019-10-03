@@ -13,7 +13,6 @@ Full stack data science project that builds machine learning model using Python 
 - converted Jupyter Notebook code to Python and PySpark/Pandas ETL script that saves final Spark dataframe as csv to S3
 - finished PySpark/Pandas script that utilizes Spark MLlib and EMR cluster to train two models (logistic regression and gradient boosted tree) and save the best pipeline/model object to s3 bucket
 - finished writing Python/boto3 script that configures and spins up AWS EMR cluster, runs PySpark ETL script and model training script, and after spins down cluster (with waiters)
-- finished skeleton Airflow DAG
 
 ### next steps
 - refactor PySpark ETL script to use PySpark udfs instead of Pandas where possible
