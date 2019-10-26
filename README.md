@@ -16,7 +16,6 @@ Full stack data science project that builds machine learning model using Python 
 
 ### next steps
 - refactor PySpark ETL script to use PySpark udfs instead of Pandas where possible
-- automate EMR cluster creation, ETL, and model training scripts using Airflow DAG
 - deploy Airflow DAG on EC2 instance
 - connect Flask API to saved model in s3
 - deploy Flask API using serverless framework or DockerFile w/ AWS ElasticBeanstalk
