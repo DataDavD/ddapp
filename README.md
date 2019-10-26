@@ -19,7 +19,7 @@ Full stack data science project that builds machine learning model using Python 
 - automate EMR cluster creation, ETL, and model training scripts using Airflow DAG
 - deploy Airflow DAG on EC2 instance
 - connect Flask API to saved model in s3
-- deploy Flask API using Zappa and AWS Lambda + API Gateway
+- deploy Flask API using serverless framework or DockerFile w/ AWS ElasticBeanstalk
 
 ### smaller things that should be fixed/changed/added
 - add VPC to EMR cluster creation
